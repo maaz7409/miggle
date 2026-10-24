@@ -108,7 +108,12 @@ describe('branding', () => {
       readRepoFile('unlimited.html'),
       readRepoFile('README.md'),
     ];
-    for (const html of pages) expect(html).not.toMatch(/feetle|poople/i);
+    // Names of other word games, stored reversed so the repo itself never spells them out.
+    const banned = new RegExp(
+      ['elteef', 'elpoop'].map((w) => [...w].reverse().join('')).join('|'),
+      'i',
+    );
+    for (const html of pages) expect(html).not.toMatch(banned);
   });
 });
 

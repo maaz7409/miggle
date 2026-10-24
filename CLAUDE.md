@@ -1,69 +1,26 @@
 # Miggle — a daily word ladder to MIGUEL
 
-Miggle is a browser word game in the style of **Feetle** (feetle.fun), which is a ladder to FEET, and **Poople**, which is a ladder to POOP. The player starts from a 6-letter word and has to reach **MIGUEL**, one step at a time, in as few steps as possible.
+Miggle is a daily browser word-ladder game. The player starts from a 6-letter word and has to reach **MIGUEL**, one step at a time, in as few steps as possible.
 
 The site is built in numbered sessions. When the user says **"Start N"**, follow the
 [Session protocol](#session-protocol) and then do [Session N](#session-plan).
 
 ---
 
-## 1. Research summary: how Feetle works (reference, Oct 2026)
+## 1. Background
 
-Sources: feetle.fun (its HTML, plus the string table of game.js), feetle.online, dailydle.org,
-feetlewordle.com (a clone), and the kirahichau/Feetle README.
-
-### Rules
-- Every word is 4 letters. The start word changes daily and the target is always **FEET**.
-- Each step changes **exactly one letter, in place**. Letters cannot be added, removed or reordered.
-- Every step must be a word in the game's dictionary. Feetle bundles about 2,550 common 4-letter words.
-- **Par** is the length of the shortest path. Score = steps taken; "extra" = steps − par. Any finish counts as a win.
-- The game uses **two word tiers**:
-  - `distances.csv` gives par, computed over *common* words.
-  - `words.csv` is the larger accepted list. Each word's value is its distance, `-1` for a dead end, or `-2` if the word is blocked.
-  - Obscure but valid words can therefore beat par, which shows the message **"You found a path under par!"** with fireworks.
-
-### Feetle's in-game messages (copy the pattern)
-`Need 4 letters` · `Not in word list` · `Change exactly one letter` ·
-`Dead end! That word can't reach FEET` · `Perfect! N steps 🦶` · `Made it in N steps (X extra)` ·
-subheader `#N · Try to solve in P words` · `Next Feetle in H:MM:SS`.
-
-### Feetle's features
-- **Daily puzzle.** Everyone gets the same puzzle. `dayNumber = floor((now − EPOCH)/1 day) + 1`, and the day resets at **08:00 UTC**. The start word is `DAILY[(day−1) % DAILY.length]`, taken from `daily.csv`.
-- **Board.** Rows of letter tiles. Letters that already match the target are highlighted (lime). It has an on-screen QWERTY keyboard (Enter and ⌫) and also takes physical keyboard input. An invalid word makes the row shake.
-- **Intro modal** opens automatically on the first visit (`seenIntro` flag).
-- **Stats modal** shows Wins, Streak and Best streak, plus a histogram keyed by extra steps.
-  - Streak = consecutive days won (`lastWin === today − 1`).
-  - After a win the modal offers "Can you solve it in P steps? Try again". It says "Perfect! Now can you find a path under par?" when you hit par.
-  - **Retry** resets the board, but only the first solve counts toward stats (`counted` flag).
-- **Share result**, copied to the clipboard:
-  ```
-  Feetle #15 6/5
-  ⬜⬜⬜⬜     ← one row per word; 🦶 where letter == target letter at that position
-  ...
-  🦶🦶🦶🦶
-  https://feetle.fun
-  ```
-  There is also a **Share streak** button: "🦶 I'm on a N-day Feetle streak! (Best: M) Can you keep up?…"
-- **Yesterday's answer** shows yesterday's shortest path. There is also a **countdown** to the next puzzle.
-- **Hints.** There are 2 per puzzle: (1) the first letter of the next shortest-path word, (2) that whole word. Hints don't change the score, but the share text flags them. **Undo** and **Restart** buttons are also available.
-- **Unlimited mode** (/unlimited) has Easy, Medium and Hard. You play a streak of puzzles and roll for a hint when you solve one at par. In Hard, each word allows par + 2 steps and running out ends the streak. There is a "GIVE UP" button.
-- **Answers archive** (/answer) lists every past puzzle (#N · START → FEET · date). Spoilers sit in `<details>` "Tap to reveal" blocks. This page is good for SEO.
-- **Other pages:** About, Privacy, Blog, How to play. Feetle also has account sync, a "suggest a word" flow for rejected words, ads and GA4. **We skip ads, accounts and analytics, unless the user asks for them later.**
-- **Storage:** everything lives in `localStorage` (state, stats, streak). No login.
-
-### Other games in this genre
-- **Poople** (poople.io) is the original "ladder to a funny word" game: daily, same for everyone, resets at 08:00 UTC, with a spoiler-free share grid.
-- **Weaver** is a word ladder with a start and an end word, changing one letter at a time.
-- **Doublets** is Lewis Carroll's 1877 original (HEAD → TAIL).
-- **feetlewordle.com** (a clone) shows a "word trail" UI, "N moves / par", and an "Unlimited" tab.
+Word ladders date back to Lewis Carroll's *Doublets* (HEAD → TAIL). Miggle follows the familiar daily-puzzle
+conventions: one shared puzzle per day, par = the shortest path over common words (rarer valid words can beat it),
+a spoiler-free emoji share grid, streak stats, two hints a day, an Unlimited mode, an answers archive, and
+everything stored in `localStorage` with no accounts, ads or analytics.
 
 ---
 
 ## 2. The key design problem, and Miggle's rules (DECIDED)
 
-**MIGUEL has no neighbours under Feetle's rule.** I verified this against ENABLE (172k words) and words_alpha (370k words):
+**MIGUEL has no neighbours under the classic in-place rule.** I verified this against ENABLE (172k words) and words_alpha (370k words):
 there is no English word one in-place letter change away from MIGUEL, and none one insert or delete away either.
-A straight Feetle clone therefore cannot be solved.
+A classic in-place ladder to MIGUEL therefore cannot be solved.
 
 **Miggle's rule: "Change one letter, then shuffle."**
 > Each step must be a real 6-letter word that uses the same letters as the previous word, with
@@ -82,7 +39,7 @@ A straight Feetle clone therefore cannot be solved.
   - `PLANET → PANELS → SALINE → SINGLE → MINGLE → MIGUEL` (5)
 - **Feasibility check.** I used about 2,100 common 6-letter words (google-20k ∩ ENABLE) plus the gate words.
   Par distribution: 3: 98 · 4: 344 · **5: 730 · 6: 625** · 7: 202 · 8: 64 · 9+: 28.
-  This sits close to Feetle's pars of 5–7.
+  Typical pars of 5–7 suit a daily puzzle.
 - I also tested a fallback, in-place changes plus a gate hop at the end. It is **rejected**: it only works with obscure words.
 
 **Tile colours** (rearranging makes positions fluid):
@@ -108,16 +65,16 @@ Append ` 💡×N` to the first line if the player used hints.
   `You must change a letter — just shuffling isn't allowed` (pure anagram) · `Already used` ·
   `Dead end! That word can't reach MIGUEL` · `Perfect! N steps 🥸` · `Made it in N steps (X extra)` ·
   `You found a path under par!`
-- **Branding:** Miggle is original. Use our own name, design, palette and copy. Never copy Feetle's assets or code, or imply any affiliation.
-  **Do not name Feetle, Poople or other games anywhere public (site, README), not even in a "not affiliated" note** (user request,
-  2026-10-24). The research notes in this file are internal; the About page credits only Lewis Carroll's *Doublets*.
+- **Branding:** Miggle is original. Use our own name, design, palette and copy. Never copy another game's assets or code, or imply any affiliation.
+  **Do not name other word games anywhere in the repo or on the site, not even in a "not affiliated" note** (user request,
+  2026-10-24; a test enforces it for public pages and the README). The About page credits only Lewis Carroll's *Doublets*.
   A GitHub button (`AUTHOR_URL` = https://github.com/maaz7409) sits at the right of the tab row on every page.
 
 ---
 
 ## 3. Tech stack and conventions
 
-- **Frontend:** Vite + vanilla **TypeScript** with no UI framework, because the game is small (Feetle is plain JS too). Plain CSS with custom-property tokens.
+- **Frontend:** Vite + vanilla **TypeScript** with no UI framework, because the game is small. Plain CSS with custom-property tokens.
 - **Tests:** Vitest for the engine and data invariants. Playwright for the end-to-end smoke tests (Session 8).
 - **Data pipeline:** Python 3 script `scripts/build_data.py`, which uses only the standard library plus `wordfreq` if available.
   It writes JSON into `public/data/` and is committed, so the site needs no build-time network access.
@@ -361,7 +318,7 @@ When the user says **"Start N"**:
 
 ### Session 7: Content pages, SEO and PWA
 - `scripts/gen_answers.ts` generates static `answers/index.html` (archive, newest first, up to today only) plus one page per past puzzle. Each page has the start word, the par, progressive hints, and the path hidden behind `<details>`. Run it at build time.
-- Add About (credits: inspired by Feetle and Poople, word-list attribution), Privacy (no tracking, localStorage only) and a standalone How to play page.
+- Add About (credits: word-list attribution), Privacy (no tracking, localStorage only) and a standalone How to play page.
 - Meta tags, Open Graph and Twitter images, favicon and icons, `site.webmanifest`, a simple service worker for offline play, `sitemap.xml` and `robots.txt`.
 - **Done when:** Lighthouse scores ≥ 95 for Performance, Accessibility, Best Practices and SEO on mobile.
 
@@ -385,12 +342,12 @@ Word-suggestion feedback form, archive replay of past dailies, accounts or cloud
 
 | Session | Status | Notes |
 |---|---|---|
-| 0 Planning | ✅ done 2026-10-24 | Researched Feetle, Poople and clones. Chose the "change one letter + shuffle" rule because MIGUEL has no in-place neighbours. Wrote this plan. |
+| 0 Planning | ✅ done 2026-10-24 | Researched the daily word-ladder genre. Chose the "change one letter + shuffle" rule because MIGUEL has no in-place neighbours. Wrote this plan. |
 | 1 Scaffold | ✅ done 2026-10-24 | Hand-written Vite vanilla-TS scaffold (no create-vite), Vitest/ESLint/Prettier wired, §3 folders (empty ones hold `.gitkeep`), `src/config.ts` (+ `STORAGE_PREFIX`; placeholder `EPOCH` = 2026-10-24 08:00 UTC), tokens/base/game CSS, placeholder page (wordmark, 5 empty rows + a green MIGUEL row, footer). Inline 🥸 SVG favicon until Session 7. Checked at 360px in light and dark. **Follow-ups:** a `SITE_URL` config value for the share text (Session 3/5); verify the amber/green tile contrast and colour-blind safety in Session 8. |
 | 2 Word data | ✅ done 2026-10-24 | `scripts/build_data.py` + `npm run data`. Report: 15,153 accepted words (79 blocked), 3,398 common, 91 dead ends; common par histogram 1: 8 · 2: 25 · 3: 175 · 4: 670 · **5: 1,303 · 6: 795** · 7: 196 · 8+: 60; daily list 1,362 puzzles (par 4: 253 · 5: 578 · 6: 406 · 7: 125); `words.json` 257 KB raw / 55 KB gzip. Tests in `tests/data.test.ts` cover the BFS invariants for fullDist and par, gate words at [1, 1], the example ladders, daily-list rules, blocklist removal and size. **Deviations:** added `data-src/daily-exclude.txt`, a bundled `freq6.tsv` and `enable-bases.txt` (inflection filter), `@types/node`; daily Zipf floor lowered from 3.5 to 3.2 to reach three years. **Follow-ups:** freeze already-published days before any post-launch data rebuild, because `daily.json` order changes when curation changes (Session 8); the blocklist is a first pass, so review it again before launch; credit wordfreq (CC BY-SA 4.0) and ENABLE on the About page (Session 7); hints could avoid awkward-but-valid words (Session 6). |
 | 3 Engine | ✅ done 2026-10-24 | Pure engine in `src/engine/` (words, rules, solver, daily, scoring, share), with no DOM access (enforced by ESLint). 85 tests: a fixture dictionary plus real data, every daily word's shortest path equals its par and validates step by step, the §2 ladders, UTC reset, leap-day and time-zone edges, and duplicate letters (MIGGLE, ILLUME, GIGGLE). Engine coverage is 100% of lines and 99% of branches. Added `@vitest/coverage-v8`, `npm run coverage`, `SITE_URL`, and `tests/helpers.ts`; `tests/data.test.ts` now reuses the engine's `neighbours`. **Deviations:** `validateStep(ladder, input, dict)` replaces the plan's `(prev, next, ladder)`, because the previous word is always the last one in the ladder. Result and error messages live in the engine (`STEP_ERROR_MESSAGES`, `resultMessage`) so daily and unlimited modes share them. Added `formatCountdown`, `dayStart` and `streakShareText`. **Follow-ups:** set the real `SITE_URL` (Session 8); the stats histogram needs an "under par" bucket, because extra can be negative (Session 5). |
 | 4 Game UI | ✅ done 2026-10-24 | Daily puzzle playable end to end. Added `src/engine/game.ts` (state machine, 7 tests) and `ui/` `board`, `keyboard`, `messages` (toast in an aria-live region), `animations` (shake, pop, bounce, fireworks that are skipped under reduced motion) and `play.ts` (shared controller). Checked in headless Chromium at 360×740 and 360×640 (light and dark) and 1280×800: all error toasts and shakes, input capped at 6, on-screen and physical keys, the new-letter marker, undo/restart, a par win ("Perfect! 5 steps 🥸"), an under-par win with fireworks, no horizontal overflow, no console errors. **Deviations:** removed the footer and tagline from the game page to fit a pinned keyboard (About/Privacy links come back in Session 7, e.g. in a header menu); `--tile-size` now fits 6 tiles inside the gutters at 360px; an inline result panel with "Try again" stands in until the Session 5 stats modal. **Follow-ups:** Session 5 needs `mountGame` to take an initial state and an `onChange` callback for persistence, plus header icon buttons (help, stats); Session 8 should add labelled tiles and keyboard focus checks. **Idea, not built:** a shortcut to copy the previous word into the input, since every step retypes 5 of the 6 letters. |
 | 5 Persistence/stats/share | ✅ done 2026-10-24 | Added `storage.ts`, `clock.ts`, `stats.ts`, `today.ts`, `restoreGame`/`isSolved`/`retryPrompt` in the engine, the modals (How to play, Stats, Yesterday's answer), Share result / Share streak, the countdown and in-place rollover. `mountGame` gained `initialState`, `onChange`, `onShare` and `getState()`/`retry()`. 119 tests; coverage now includes storage, stats and today (99.6% of lines). Browser-checked with `?date=`: first-visit help, reload keeps half-typed input, the win opens stats, the exact share text, a post-retry solve not counted, a solved day restored on reload, day 2 streak 2 with Yesterday's answer, a missed day resetting the streak to 0 (best kept), and a live rollover from #4 to #5 at 08:00 UTC. No console errors. **Bugs found and fixed:** keys were dropped, and an Enter swallowed, right after a modal closed (focus lingered in the closing `<dialog>`); the help legend layout; the focus ring on the close button. **Deviations:** the reset re-initialises in place instead of reloading the page; Stats auto-opens on reload when today is already solved; the inline result panel gained a Share button. **Follow-ups:** Session 6 hints need a `hints` field in `TodayRecord` and in the share text; Session 8 Playwright e2e can reuse the `?date=` flows above (wait for dialogs before pressing keys). |
-| 6 Hints + Unlimited | ✅ done 2026-10-24 | Daily hints (2 a day, two levels, saved, 💡×N in the share text) and an Unlimited page (difficulty picker, random puzzles without repeats per run, streak, earned hint bank, Next word, GIVE UP with confirmation, Hard par + 2 limit, separate stats, saved runs). Both modes mount through the same `mountGame`; the shared page bootstrap is in `page.ts`. Data pipeline emits `unlimited.json` (daily data unchanged byte for byte). 142 tests; coverage 99.7% of lines. Browser-checked: both hint levels, the free repeat, the banner hiding, hints persisting over reload, the share flag, an Unlimited par solve earning a hint, Next word not repeating, reload mid-run, a difficulty switch with confirm, Hard out of steps, give up with cancel and confirm, give up persisting over reload, the stats tally, light and dark at 360px, no console errors. **Deviations:** Hard hides Undo/Restart (otherwise the step limit could be dodged); the hint bank starts at 0 and is earned deterministically (Feetle rolls for it); Unlimited has no share button; unlimited pool words can also appear as future daily words. **Follow-ups:** hint and solution paths can include `daily-exclude` words (e.g. BURTON, BOURNE); consider steering `nextOnShortestPath` away from them (data or solver); toasts at a fixed 22dvh can overlap the puzzle info on Unlimited; Session 7 needs `unlimited.html` in the sitemap and About links. |
+| 6 Hints + Unlimited | ✅ done 2026-10-24 | Daily hints (2 a day, two levels, saved, 💡×N in the share text) and an Unlimited page (difficulty picker, random puzzles without repeats per run, streak, earned hint bank, Next word, GIVE UP with confirmation, Hard par + 2 limit, separate stats, saved runs). Both modes mount through the same `mountGame`; the shared page bootstrap is in `page.ts`. Data pipeline emits `unlimited.json` (daily data unchanged byte for byte). 142 tests; coverage 99.7% of lines. Browser-checked: both hint levels, the free repeat, the banner hiding, hints persisting over reload, the share flag, an Unlimited par solve earning a hint, Next word not repeating, reload mid-run, a difficulty switch with confirm, Hard out of steps, give up with cancel and confirm, give up persisting over reload, the stats tally, light and dark at 360px, no console errors. **Deviations:** Hard hides Undo/Restart (otherwise the step limit could be dodged); the hint bank starts at 0 and is earned deterministically (no random roll); Unlimited has no share button; unlimited pool words can also appear as future daily words. **Follow-ups:** hint and solution paths can include `daily-exclude` words (e.g. BURTON, BOURNE); consider steering `nextOnShortestPath` away from them (data or solver); toasts at a fixed 22dvh can overlap the puzzle info on Unlimited; Session 7 needs `unlimited.html` in the sitemap and About links. |
 | 7 Content/SEO/PWA | ✅ done 2026-10-24 | Added the content pages, the answers archive and per-puzzle pages, meta/OG/Twitter tags, icons, OG image, manifest, service worker, sitemap and robots, the Answers tab, `<noscript>` text, and About/Privacy/Answers links in the How to play modal. Word rows now have `role="img"`. 150 tests (generator: tile colours, spoiler safety, archive order, sitemap, links). Lighthouse mobile: 100 in all four categories on all 7 page types. Offline check: after one visit, `/`, `/unlimited.html`, an answer page and How to play all load offline, and play works. **Bug found and fixed:** Unlimited failed offline because precached JS missed on `Vary: Origin`; fixed with `ignoreVary`. **Deviations:** the generator is `gen_pages.ts` and also renders About/Privacy/How to play from `content/` fragments (one layout, engine-coloured tiles); generated pages, sitemap and robots are gitignored and rebuilt by `npm run build`; the archive includes today's puzzle with everything behind `<details>`; `tsx` and `playwright-core` were added as dev deps; esbuild's postinstall is left unapproved (tsx works without it). **Follow-ups:** the archive only updates on rebuild, so Session 8 deploy needs a daily scheduled build after 08:00 UTC; set the real `VITE_SITE_URL` (Session 8); Lighthouse ran on localhost (no HTTP/2 or CDN), so re-check after deploy. |
 | 8 Polish/QA/deploy | ✅ done 2026-10-24 | **Launch decisions (user):** host on Vercel; puzzle #1 at 25 Oct 00:00 IST; reset every midnight IST (18:30 UTC); push and deploy this session. **Built:** settings modal (theme system/light/dark, colour-blind orange/blue palette that also changes share emoji to 🟧🟦, reduce motion), applied before first paint by an inline script that the `miggle-early-settings` Vite plugin injects into every page (`src/early-settings.js`, mirrors `settings.ts`); tiles labelled by meaning ("U, right spot, new letter"), rows as labelled groups ("Step 2: CLAUSE"), accepted words announced through an sr-only live region; contrast audit (green darkened to `#21844a`, 4.7:1 with white, and used in both themes); toasts anchored below the puzzle info; published-days freezing in `build_data.py` (`freeze_published`, `--unfreeze`; checked by excluding #1's and #6's words: #1 kept, later days reflowed); Playwright e2e (11 specs × 5 projects: 67 pass, 3 skipped by design); `vercel.json` (cache and security headers); CI and daily-rebuild workflows; README deployment notes and launch checklist. 155 unit tests, coverage 99.7% of lines; Lighthouse still 100 in all four categories. **Deviations:** tile labels name meanings rather than colours, so they stay correct in the colour-blind palette; no CSP header yet, because the inline settings script would need a hash; domain `playmiggle.vercel.app`, since `miggle.vercel.app` is taken. **Deployed 2026-10-24:** pushed to `maaz7409/miggle`; Vercel production at https://playmiggle.vercel.app; first CI run green (all steps); daily-rebuild workflow triggered by hand and started a new production build through the hook (secret `VERCEL_DEPLOY_HOOK_URL`). Live check: all pages, data and SEO files return 200, headers and cache rules applied, #1 played to a win with share text ending in the production URL, offline play works, no console errors; Lighthouse on production 100/100/100/100 (LCP 0.8–1.1 s). **Follow-ups:** review the blocklist and daily-exclude lists; hints and solution paths can still use `daily-exclude` words; consider a CSP with a script hash; optional custom domain. |
