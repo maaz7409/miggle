@@ -26,7 +26,7 @@ npm run data       # rebuild public/data/ from data-src/ (Python 3, stdlib only)
 
 `scripts/build_data.py` turns the curated sources in `data-src/` into `public/data/words.json`
 (`{WORD: [fullDist, par|null]}`, where `-1` is a dead end) and `public/data/daily.json` (start words in
-puzzle order). The output is deterministic and committed, so building the site needs no network.
+puzzle order), plus `public/data/unlimited.json` (the Unlimited start-word pool). The output is deterministic and committed, so building the site needs no network.
 
 | File                         | Purpose                                                           |
 | ---------------------------- | ----------------------------------------------------------------- |
@@ -48,6 +48,7 @@ pip install wordfreq && python3 scripts/build_data.py --refresh-freq   # new fre
 
 ```
 index.html          daily game page
+unlimited.html      Unlimited mode (Easy / Medium / Hard streaks)
 src/config.ts       TARGET, WORD_LEN, EPOCH, RESET_HOUR_UTC
 src/engine/         pure game logic (no DOM)
 src/ui/             board, keyboard, modals, messages

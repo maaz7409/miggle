@@ -1,4 +1,4 @@
-import { TARGET, WORD_LEN } from '../config';
+import { DAILY_HINTS, TARGET, WORD_LEN } from '../config';
 import { dayStart } from '../engine/daily';
 import { prefersReducedMotion } from './animations';
 import { createTile, ladderRows, wordRow } from './board';
@@ -49,7 +49,32 @@ function legendItem(colour: 'green' | 'amber' | 'grey', letter: string, text: st
   );
 }
 
-export function openHelpModal(): ModalHandle {
+function modeSection(mode: 'daily' | 'unlimited'): Node[] {
+  if (mode === 'daily') {
+    return [
+      h('h3', {}, 'Hints'),
+      h(
+        'p',
+        {},
+        `You get ${DAILY_HINTS} hints a day: the first shows which letter to swap, the second the whole next word. `,
+        "Hints don't change your score, but your share shows a 💡.",
+      ),
+    ];
+  }
+  return [
+    h('h3', {}, 'Unlimited'),
+    h(
+      'ul',
+      { class: 'rules' },
+      h('li', {}, 'Easy puzzles have par 3–4, Medium 5–6, Hard 7 or more.'),
+      h('li', {}, 'Solve at or under par to earn a 💡 hint for later.'),
+      h('li', {}, 'On Hard you get par + 2 steps. Run out and your streak ends.'),
+      h('li', {}, 'Giving up ends your streak and shows an answer.'),
+    ),
+  ];
+}
+
+export function openHelpModal(mode: 'daily' | 'unlimited' = 'daily'): ModalHandle {
   const demo = swapDemo();
   const marked = createTile('U', 'green');
   marked.dataset.new = '';
@@ -84,6 +109,7 @@ export function openHelpModal(): ModalHandle {
           h('span', {}, 'The letter you swapped in'),
         ),
       ),
+      ...modeSection(mode),
       h('h3', {}, 'Example'),
       h('div', { class: 'board board--compact' }, ...ladderRows(EXAMPLE_LADDER)),
       h(

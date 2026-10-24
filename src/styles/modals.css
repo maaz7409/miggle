@@ -235,3 +235,40 @@
   font: inherit;
   font-size: 0.875rem;
 }
+
+/* ---------------------------------------------------------------- confirm & unlimited stats */
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.tally {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.tally th,
+.tally td {
+  padding: var(--space-2) var(--space-1);
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+
+.tally thead th {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.tally tbody th {
+  text-align: left;
+}
+
+.tally td {
+  font-family: var(--font-display);
+  font-weight: 600;
+}

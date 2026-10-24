@@ -13,6 +13,9 @@ export const RESET_HOUR_UTC = 8;
  */
 export const EPOCH = Date.UTC(2026, 9, 24, RESET_HOUR_UTC);
 
+/** Hints available on each daily puzzle (1: which letter to swap, 2: the next word). */
+export const DAILY_HINTS = 2;
+
 /** Prefix for every localStorage key. */
 export const STORAGE_PREFIX = 'miggle.';
 

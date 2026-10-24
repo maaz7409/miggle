@@ -1,9 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { parseDateParam } from '../src/clock';
 import { newGame, restoreGame, submit, typeLetter, type GameState } from '../src/engine/game';
+import { scoreLadder } from '../src/engine/scoring';
 import {
   currentStreak,
   emptyStats,
+  emptyUnlimitedStats,
+  loadUnlimitedStats,
+  recordUnlimitedWin,
+  sanitizeUnlimitedStats,
+  saveUnlimitedStats,
   histogramBuckets,
   loadStats,
   recordWin,
@@ -18,6 +24,7 @@ import {
   type KeyValueStore,
 } from '../src/storage';
 import { freshToday, loadToday, saveToday } from '../src/today';
+import { loadUnlimited, recordFor, saveUnlimited } from '../src/unlimited-record';
 import { realDict } from './helpers';
 
 class MemoryStore implements KeyValueStore {
@@ -119,6 +126,7 @@ describe('today record', () => {
       state: play('CASTLE', ['CLAUSE'], 'MU'),
       counted: true,
       solved: solved.ladder,
+      hints: 1,
     };
     saveToday(record);
     expect(loadToday(3, 'CASTLE', realDict)).toEqual(record);
@@ -144,6 +152,13 @@ describe('today record', () => {
   it('drops an invalid first-solve ladder but keeps the rest', () => {
     saveToday({ ...freshToday(3, 'CASTLE'), counted: true, solved: ['CASTLE', 'CLAUSE'] });
     expect(loadToday(3, 'CASTLE', realDict)).toMatchObject({ counted: true, solved: null });
+  });
+
+  it('clamps the hint count', () => {
+    saveToday({ ...freshToday(3, 'CASTLE'), hints: 9 });
+    expect(loadToday(3, 'CASTLE', realDict).hints).toBe(2);
+    store.data.set('miggle.today', JSON.stringify({ ...freshToday(3, 'CASTLE'), hints: 'lots' }));
+    expect(loadToday(3, 'CASTLE', realDict).hints).toBe(0);
   });
 
   it('ignores garbage', () => {
@@ -239,5 +254,69 @@ describe('parseDateParam', () => {
     expect(parseDateParam('2026-11-02')).toBe(Date.parse('2026-11-02T12:00:00Z'));
     expect(parseDateParam('2026-11-02T07:59:50Z')).toBe(Date.parse('2026-11-02T07:59:50Z'));
     expect(parseDateParam('soon')).toBeNaN();
+  });
+});
+
+describe('unlimited record', () => {
+  const run = { difficulty: 'hard' as const, streak: 2, used: ['RABIES', 'CASTLE'], hints: 1 };
+
+  it('round-trips a run in progress', () => {
+    const record = {
+      run,
+      start: 'CASTLE',
+      state: play('CASTLE', ['CLAUSE'], 'MU'),
+      forfeited: false,
+    };
+    saveUnlimited(record);
+    expect(loadUnlimited(realDict)).toEqual(record);
+    expect(recordFor(run, 'BRIDGE')).toEqual({
+      run,
+      start: 'BRIDGE',
+      state: newGame('BRIDGE'),
+      forfeited: false,
+    });
+  });
+
+  it.each([
+    ['nothing saved', undefined],
+    [
+      'bad difficulty',
+      { run: { ...run, difficulty: 'insane' }, start: 'CASTLE', state: newGame('CASTLE') },
+    ],
+    ['bad streak', { run: { ...run, streak: -1 }, start: 'CASTLE', state: newGame('CASTLE') }],
+    ['bad used list', { run: { ...run, used: [1] }, start: 'CASTLE', state: newGame('CASTLE') }],
+    ['unknown start', { run, start: 'ZZZZZZ', state: newGame('ZZZZZZ') }],
+    [
+      'invalid ladder',
+      { run, start: 'CASTLE', state: { ladder: ['CASTLE', 'BRIDGE'], input: '' } },
+    ],
+    ['missing run', { start: 'CASTLE', state: newGame('CASTLE') }],
+  ])('rejects %s', (_, value) => {
+    if (value !== undefined) store.data.set('miggle.unlimited', JSON.stringify(value));
+    expect(loadUnlimited(realDict)).toBeNull();
+  });
+});
+
+describe('unlimited stats', () => {
+  const ladder = ['CASTLE', 'CLAUSE', 'MUSCLE', 'MUESLI', 'MIGUEL'];
+
+  it('tallies solves, par-or-better solves and best streak per difficulty', () => {
+    let s = recordUnlimitedWin(emptyUnlimitedStats(), 'hard', scoreLadder(ladder, 4), 1);
+    s = recordUnlimitedWin(s, 'hard', scoreLadder(ladder, 3), 2);
+    s = recordUnlimitedWin(s, 'hard', scoreLadder(ladder, 5), 1);
+    expect(s.hard).toEqual({ solved: 3, perfect: 2, bestStreak: 2 });
+    expect(s.easy).toEqual({ solved: 0, perfect: 0, bestStreak: 0 });
+    saveUnlimitedStats(s);
+    expect(loadUnlimitedStats()).toEqual(s);
+  });
+
+  it('drops malformed tallies', () => {
+    expect(sanitizeUnlimitedStats('x')).toBeNull();
+    const s = sanitizeUnlimitedStats({
+      easy: { solved: 1, perfect: 1, bestStreak: 1 },
+      hard: { solved: -2 },
+    });
+    expect(s?.easy.solved).toBe(1);
+    expect(s?.hard).toEqual({ solved: 0, perfect: 0, bestStreak: 0 });
   });
 });

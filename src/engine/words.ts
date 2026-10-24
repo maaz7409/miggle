@@ -66,28 +66,48 @@ export interface GameData {
   daily: readonly string[];
 }
 
-const cache = new Map<string, Promise<GameData>>();
+const DEFAULT_BASE = `${import.meta.env.BASE_URL}data/`;
+const cache = new Map<string, Promise<unknown>>();
 
-/**
- * Fetch and cache words.json and daily.json from `baseUrl`.
- * A failed load is evicted from the cache so the caller can retry.
- */
-export function loadGameData(
-  baseUrl = `${import.meta.env.BASE_URL}data/`,
-  fetchFn: typeof fetch = fetch,
-): Promise<GameData> {
-  let pending = cache.get(baseUrl);
+/** Fetch and cache one JSON file. A failed load is evicted from the cache so it can be retried. */
+function fetchJson<T>(url: string, fetchFn: typeof fetch): Promise<T> {
+  let pending = cache.get(url) as Promise<T> | undefined;
   if (!pending) {
-    const getJson = async <T>(name: string): Promise<T> => {
-      const res = await fetchFn(`${baseUrl}${name}`);
-      if (!res.ok) throw new Error(`Failed to load ${name}: HTTP ${res.status}`);
+    pending = fetchFn(url).then(async (res) => {
+      if (!res.ok) throw new Error(`Failed to load ${url.split('/').pop()}: HTTP ${res.status}`);
       return (await res.json()) as T;
-    };
-    pending = Promise.all([getJson<WordData>('words.json'), getJson<string[]>('daily.json')]).then(
-      ([words, daily]) => ({ dict: new Dictionary(words), daily }),
-    );
-    pending.catch(() => cache.delete(baseUrl));
-    cache.set(baseUrl, pending);
+    });
+    pending.catch(() => cache.delete(url));
+    cache.set(url, pending);
   }
   return pending;
+}
+
+/** Fetch (once) words.json and daily.json from `baseUrl`. */
+export async function loadGameData(
+  baseUrl = DEFAULT_BASE,
+  fetchFn: typeof fetch = fetch,
+): Promise<GameData> {
+  const [words, daily] = await Promise.all([
+    fetchJson<WordData>(`${baseUrl}words.json`, fetchFn),
+    fetchJson<string[]>(`${baseUrl}daily.json`, fetchFn),
+  ]);
+  return { dict: dictionaryFor(words), daily };
+}
+
+/** Fetch (once) the Unlimited start-word pool. */
+export function loadUnlimitedPool(
+  baseUrl = DEFAULT_BASE,
+  fetchFn: typeof fetch = fetch,
+): Promise<readonly string[]> {
+  return fetchJson<string[]>(`${baseUrl}unlimited.json`, fetchFn);
+}
+
+const dictionaries = new WeakMap<WordData, Dictionary>();
+
+/** One Dictionary per loaded word list, so its anagram index is built only once. */
+function dictionaryFor(words: WordData): Dictionary {
+  let dict = dictionaries.get(words);
+  if (!dict) dictionaries.set(words, (dict = new Dictionary(words)));
+  return dict;
 }

@@ -1,3 +1,5 @@
+import type { Score } from './engine/scoring';
+import { DIFFICULTY_ORDER, type Difficulty } from './engine/unlimited';
 import { readJson, writeJson } from './storage';
 
 const KEY = 'stats';
@@ -89,4 +91,60 @@ export function loadStats(): Stats {
 
 export function saveStats(stats: Stats): void {
   writeJson(KEY, stats);
+}
+
+// ------------------------------------------------------------------ Unlimited
+
+const UNLIMITED_KEY = 'unlimitedStats';
+
+export interface UnlimitedTally {
+  solved: number;
+  /** Solved at or under par. */
+  perfect: number;
+  bestStreak: number;
+}
+
+export type UnlimitedStats = Readonly<Record<Difficulty, UnlimitedTally>>;
+
+export function emptyUnlimitedStats(): UnlimitedStats {
+  const zero = (): UnlimitedTally => ({ solved: 0, perfect: 0, bestStreak: 0 });
+  return { easy: zero(), medium: zero(), hard: zero() };
+}
+
+export function sanitizeUnlimitedStats(raw: unknown): UnlimitedStats | null {
+  if (typeof raw !== 'object' || raw === null) return null;
+  const out = emptyUnlimitedStats() as Record<Difficulty, UnlimitedTally>;
+  for (const d of DIFFICULTY_ORDER) {
+    const t = (raw as Record<string, unknown>)[d] as Record<string, unknown> | undefined;
+    if (t && isCount(t.solved) && isCount(t.perfect) && isCount(t.bestStreak)) {
+      out[d] = { solved: t.solved, perfect: t.perfect, bestStreak: t.bestStreak };
+    }
+  }
+  return out;
+}
+
+/** Count an Unlimited solve; `streak` is the run's streak including this solve. */
+export function recordUnlimitedWin(
+  stats: UnlimitedStats,
+  difficulty: Difficulty,
+  score: Score,
+  streak: number,
+): UnlimitedStats {
+  const t = stats[difficulty];
+  return {
+    ...stats,
+    [difficulty]: {
+      solved: t.solved + 1,
+      perfect: t.perfect + (score.extra <= 0 ? 1 : 0),
+      bestStreak: Math.max(t.bestStreak, streak),
+    },
+  };
+}
+
+export function loadUnlimitedStats(): UnlimitedStats {
+  return readJson(UNLIMITED_KEY, emptyUnlimitedStats(), sanitizeUnlimitedStats);
+}
+
+export function saveUnlimitedStats(stats: UnlimitedStats): void {
+  writeJson(UNLIMITED_KEY, stats);
 }

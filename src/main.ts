@@ -1,15 +1,12 @@
-import '@fontsource-variable/fredoka';
-import './styles/tokens.css';
-import './styles/base.css';
-import './styles/game.css';
-import './styles/modals.css';
-import { initClock, now } from './clock';
+import { now } from './clock';
+import { DAILY_HINTS } from './config';
 import { dayNumber, msUntilNext, startWord } from './engine/daily';
 import type { GameState } from './engine/game';
 import { scoreLadder, type Score } from './engine/scoring';
 import { shareText, streakShareText } from './engine/share';
 import { loadGameData, type Dictionary } from './engine/words';
 import { currentStreak, loadStats, recordWin, saveStats } from './stats';
+import { headerButton, setupPage, showLoadError } from './page';
 import { readJson, writeJson } from './storage';
 import { loadToday, saveToday, type TodayRecord } from './today';
 import { openHelpModal } from './ui/help';
@@ -29,10 +26,7 @@ interface Daily {
   game: PlayHandle;
 }
 
-initClock(location.search);
 const root = document.querySelector<HTMLElement>('#game')!;
-const headerButton = (action: string) =>
-  document.querySelector<HTMLButtonElement>(`[data-action="${action}"]`)!;
 
 let current: Daily | null = null;
 let rolloverTimer: number | undefined;
@@ -52,7 +46,9 @@ function solvedLadder(): readonly string[] | null {
 
 function shareResult(): void {
   const ladder = solvedLadder();
-  if (current && ladder) void share(shareText({ day: current.day, ladder, par: current.par }));
+  if (!current || !ladder) return;
+  const { day, par, record } = current;
+  void share(shareText({ day, ladder, par, hints: record.hints }));
 }
 
 function shareStreak(): void {
@@ -103,11 +99,22 @@ async function startDay(): Promise<void> {
     initialState: record.state,
     onChange: (state) => save({ state }),
     onWin: handleWin,
-    onShare: shareResult,
+    hints: {
+      // `current` is only set once mountGame returns, so fall back to the loaded record.
+      remaining: () => DAILY_HINTS - (current?.record ?? record).hints,
+      spend: () => save({ hints: (current?.record ?? record).hints + 1 }),
+    },
+    resultActions: (outcome, game) =>
+      outcome === 'won'
+        ? [
+            { label: 'Share', primary: true, onClick: shareResult },
+            { label: 'Try again', onClick: () => game.retry() },
+          ]
+        : [],
   });
   current = { dict, daily, day, par, record, game };
-  headerButton('stats').disabled = false;
-  headerButton('yesterday').disabled = false;
+  headerButton('stats')!.disabled = false;
+  headerButton('yesterday')!.disabled = false;
   scheduleRollover();
 }
 
@@ -126,28 +133,11 @@ function checkRollover(): void {
   void startDay().then(() => showToast('A new Miggle is here!', 2500));
 }
 
-function showLoadError(err: unknown): void {
-  console.error(err);
-  const msg = document.createElement('p');
-  msg.className = 'status-message';
-  msg.textContent = "Couldn't load today's puzzle.";
-  const retry = document.createElement('button');
-  retry.type = 'button';
-  retry.className = 'btn btn--primary';
-  retry.textContent = 'Try again';
-  retry.addEventListener('click', () => {
-    msg.textContent = 'Loading…';
-    root.replaceChildren(msg);
-    void init();
-  });
-  root.replaceChildren(msg, retry);
-}
-
 async function init(): Promise<void> {
   try {
     await startDay();
   } catch (err) {
-    showLoadError(err);
+    showLoadError(root, err, () => void init());
     return;
   }
   if (!readJson('seenIntro', false)) {
@@ -158,13 +148,12 @@ async function init(): Promise<void> {
   }
 }
 
-const header = document.querySelector<HTMLElement>('.site-header')!;
-// A mouse click must not leave focus on a header button that a physical Enter would press.
-header.addEventListener('mousedown', (e) => e.preventDefault());
-headerButton('help').addEventListener('click', () => openHelpModal());
-headerButton('stats').addEventListener('click', showStats);
-headerButton('yesterday').addEventListener('click', () => {
-  if (current) openYesterdayModal(current.day, current.dict, current.daily);
+setupPage({
+  help: () => openHelpModal(),
+  stats: showStats,
+  yesterday: () => {
+    if (current) openYesterdayModal(current.day, current.dict, current.daily);
+  },
 });
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') checkRollover();

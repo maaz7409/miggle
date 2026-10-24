@@ -7,6 +7,8 @@ Reads the curated sources in data-src/ and writes:
                           par:      steps to MIGUEL using common words only (null if the word
                                     is not common or cannot reach MIGUEL through common words)
   public/data/daily.json  [START_WORD, ...] in puzzle order (puzzle #N uses index (N-1) % len)
+  public/data/unlimited.json  [START_WORD, ...] alphabetical pool of good start words with par >= 3
+                          (the app splits it into difficulties by par)
 
 A step keeps 5 of the 6 letters (multiset) and swaps one for a different letter;
 the result may be any rearrangement. See CLAUDE.md §2.
@@ -37,6 +39,7 @@ WORD_LEN = 6
 COMMON_ZIPF = 3.0  # wordfreq Zipf threshold for the "common" tier (par)
 DAILY_ZIPF = 3.2  # daily start words should be well known
 DAILY_PAR = range(4, 8)  # par 4..7 inclusive
+UNLIMITED_MIN_PAR = 3
 DAILY_MIN_LEN = 3 * 365 + 1  # at least three years of puzzles
 DAILY_SEED = 20261024
 
@@ -200,19 +203,21 @@ def smooth_round_robin(buckets: dict[int, list[str]]) -> list[str]:
     return out
 
 
-def build_daily(
+def start_candidates(
     common: set[str],
     par: dict[str, int],
     freq: dict[str, float],
     bases: set[str],
     exclude: set[str],
+    allowed_par,
 ) -> list[str]:
+    """Well-known, non-inflected common words with par in `allowed_par`, alphabetical."""
     cands = sorted(
         w
         for w in common
         if w != TARGET
         and w not in exclude
-        and par.get(w, -1) in DAILY_PAR
+        and par.get(w, -1) in allowed_par
         and freq.get(w, 0) >= DAILY_ZIPF
         and not is_inflection(w, bases)
     )
@@ -220,9 +225,19 @@ def build_daily(
     by_key: dict[str, str] = {}
     for w in sorted(cands, key=lambda w: (-freq.get(w, 0), w)):
         by_key.setdefault(key(w), w)
+    return sorted(by_key.values())
+
+
+def build_daily(
+    common: set[str],
+    par: dict[str, int],
+    freq: dict[str, float],
+    bases: set[str],
+    exclude: set[str],
+) -> list[str]:
     rng = random.Random(DAILY_SEED)
     by_par: dict[int, list[str]] = collections.defaultdict(list)
-    for w in sorted(by_key.values()):
+    for w in start_candidates(common, par, freq, bases, exclude, DAILY_PAR):
         by_par[par[w]].append(w)
     for ws in by_par.values():
         rng.shuffle(ws)
@@ -273,6 +288,11 @@ def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     words_json = json.dumps(dict(sorted(words.items())), separators=(",", ":")) + "\n"
     daily_json = json.dumps(daily, separators=(",", ":")) + "\n"
+    unlimited = start_candidates(
+        common, par, freq, bases, daily_exclude, range(UNLIMITED_MIN_PAR, 100)
+    )
+    unlimited_json = json.dumps(unlimited, separators=(",", ":")) + "\n"
+    (OUT / "unlimited.json").write_text(unlimited_json, encoding="utf-8")
     (OUT / "words.json").write_text(words_json, encoding="utf-8")
     (OUT / "daily.json").write_text(daily_json, encoding="utf-8")
 
@@ -293,6 +313,7 @@ def main() -> None:
     print(f"daily first 10 : {' '.join(daily[:10])}")
     print(f"words.json     : {kb(words_json)}")
     print(f"daily.json     : {kb(daily_json)}")
+    print(f"unlimited pool : {len(unlimited)} words, par {histogram(par[w] for w in unlimited)}")
     print("sample par paths (common words only):")
     common_buckets = build_buckets(common | {TARGET})
     for w in ["CASTLE", "BRIDGE", "ORANGE", "PLANET", *daily[:4]]:

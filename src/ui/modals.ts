@@ -64,3 +64,27 @@ export function openModal(title: string, content: Node[], onClose?: () => void):
 export function closeModal(): void {
   current?.close();
 }
+
+/** Ask a yes/no question. Resolves true only if the player confirms. */
+export function confirmModal(
+  title: string,
+  message: string,
+  confirmLabel: string,
+  cancelLabel = 'Cancel',
+): Promise<boolean> {
+  return new Promise((resolve) => {
+    let confirmed = false;
+    const yes = h('button', { type: 'button', class: 'btn btn--primary' }, confirmLabel);
+    const no = h('button', { type: 'button', class: 'btn btn--ghost' }, cancelLabel);
+    const modal = openModal(
+      title,
+      [h('p', {}, message), h('div', { class: 'confirm-actions' }, no, yes)],
+      () => resolve(confirmed),
+    );
+    yes.addEventListener('click', () => {
+      confirmed = true;
+      modal.close();
+    });
+    no.addEventListener('click', () => modal.close());
+  });
+}

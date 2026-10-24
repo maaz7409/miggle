@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Endless Miggle word ladders to MIGUEL. Pick Easy, Medium or Hard and build a streak."
+    />
+    <meta name="theme-color" content="#fbf6ee" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#16121b" media="(prefers-color-scheme: dark)" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥸</text></svg>"
+    />
+    <title>Miggle Unlimited</title>
+  </head>
+  <body class="game-page">
+    <header class="site-header">
+      <div class="header-side">
+        <button type="button" class="icon-btn" data-action="help" aria-label="How to play">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6" />
+            <circle cx="12" cy="17.2" r=".6" class="fill" />
+          </svg>
+        </button>
+      </div>
+      <h1 class="wordmark">MIGGLE</h1>
+      <div class="header-side header-side--end">
+        <button type="button" class="icon-btn" data-action="stats" aria-label="Statistics" disabled>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 20V11M12 20V5M19 20v-6" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <nav class="mode-tabs" aria-label="Game mode">
+      <a href="./">Daily</a>
+      <a href="./unlimited.html" aria-current="page">Unlimited</a>
+    </nav>
+
+    <main class="site-main game-shell">
+      <div class="unlimited-bar">
+        <div class="segmented" role="group" aria-label="Difficulty">
+          <button type="button" data-difficulty="easy" aria-pressed="false" disabled>Easy</button>
+          <button type="button" data-difficulty="medium" aria-pressed="false" disabled>
+            Medium
+          </button>
+          <button type="button" data-difficulty="hard" aria-pressed="false" disabled>Hard</button>
+        </div>
+        <p class="run-streak" title="Streak">
+          <span aria-hidden="true">🔥</span><span class="sr-only">Streak</span>
+          <strong data-ref="streak">0</strong>
+        </p>
+        <button type="button" class="btn btn--ghost btn--small" data-ref="giveUp" disabled>
+          Give up
+        </button>
+      </div>
+      <div id="game" class="game">
+        <p class="status-message">Loading…</p>
+      </div>
+    </main>
+
+    <script type="module" src="/src/unlimited.ts"></script>
+  </body>
+</html>

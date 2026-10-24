@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Dictionary, loadGameData, normalize, sortedKey } from '../src/engine/words';
+import {
+  Dictionary,
+  loadGameData,
+  loadUnlimitedPool,
+  normalize,
+  sortedKey,
+} from '../src/engine/words';
 
 const DATA = {
   CASTLE: [4, 4],
@@ -55,16 +61,23 @@ describe('loadGameData', () => {
     const fetchFn = vi.fn(async (url: string | URL | Request) =>
       String(url).endsWith('words.json') ? ok(DATA) : ok(['CASTLE']),
     );
-    const first = loadGameData('/cache-test/', fetchFn);
-    const second = loadGameData('/cache-test/', fetchFn);
-    expect(second).toBe(first);
-    const data = await first;
+    const data = await loadGameData('/cache-test/', fetchFn);
+    const again = await loadGameData('/cache-test/', fetchFn);
+    expect(again.dict).toBe(data.dict); // the anagram index is built once
     expect(data.dict.par('CASTLE')).toBe(4);
     expect(data.daily).toEqual(['CASTLE']);
     expect(fetchFn.mock.calls.map(([u]) => u)).toEqual([
       '/cache-test/words.json',
       '/cache-test/daily.json',
     ]);
+  });
+
+  it('loads the unlimited pool through the same cache', async () => {
+    const fetchFn = vi.fn(async () => ok(['CASTLE', 'ORANGE']));
+    expect(await loadUnlimitedPool('/pool-test/', fetchFn)).toEqual(['CASTLE', 'ORANGE']);
+    await loadUnlimitedPool('/pool-test/', fetchFn);
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+    expect(fetchFn).toHaveBeenCalledWith('/pool-test/unlimited.json');
   });
 
   it('defaults to the site data directory', async () => {

@@ -1,3 +1,4 @@
+import { DAILY_HINTS } from './config';
 import { isSolved, newGame, restoreGame, type GameState } from './engine/game';
 import type { Dictionary } from './engine/words';
 import { readJson, writeJson } from './storage';
@@ -12,10 +13,12 @@ export interface TodayRecord {
   counted: boolean;
   /** Ladder of the first solve, so it can still be shared mid-retry. */
   solved: readonly string[] | null;
+  /** Hints used today (0–DAILY_HINTS); flagged in the share text. */
+  hints: number;
 }
 
 export function freshToday(day: number, start: string): TodayRecord {
-  return { day, state: newGame(start), counted: false, solved: null };
+  return { day, state: newGame(start), counted: false, solved: null, hints: 0 };
 }
 
 /**
@@ -37,6 +40,10 @@ export function loadToday(day: number, start: string, dict: Dictionary): TodayRe
     state,
     counted: r.counted === true,
     solved: solved && isSolved(solved.ladder) ? solved.ladder : null,
+    hints:
+      Number.isInteger(r.hints) && (r.hints as number) >= 0
+        ? Math.min(r.hints as number, DAILY_HINTS)
+        : 0,
   };
 }
 

@@ -140,7 +140,7 @@ Append ` 💡×N` to the first line if the player used hints.
   - Available: `npm run dev`, `npm run build` (`tsc --noEmit` + `vite build`), `npm run preview`,
     `npm test` (Vitest, `tests/**/*.test.ts`), `npm run test:watch`, `npm run lint` (ESLint + `prettier --check`),
     `npm run format` (Prettier write), `npm run data` (`python3 scripts/build_data.py`; rebuilds `public/data/`),
-    `npm run coverage` (Vitest + v8 coverage of `src/engine/**`, `storage.ts`, `stats.ts` and `today.ts`; thresholds: 95% lines,
+    `npm run coverage` (Vitest + v8 coverage of `src/engine/**`, `storage.ts`, `stats.ts`, `today.ts` and `unlimited-record.ts`; thresholds: 95% lines,
     functions and statements, 90% branches).
   - Planned: `npm run e2e` (Session 8).
 - **Word data facts (Session 2):**
@@ -210,6 +210,30 @@ Append ` 💡×N` to the first line if the player used hints.
   - **Sharing:** `ui/share.ts` `share(text)` tries `navigator.share` (coarse pointer only), then the clipboard, then
     `execCommand('copy')`, then a manual-copy modal.
   - **Helpers:** `ui/dom.ts` has an `h()` element builder. The header has help, yesterday and stats icon buttons.
+- **Hints and Unlimited (Session 6):**
+  - **Data:** `public/data/unlimited.json` is an alphabetical pool of good start words with par ≥ 3, using the same quality filters
+    as the daily list (1,482 words). Difficulty bands live in `engine/unlimited.ts` `DIFFICULTIES`: Easy par 3–4 (332 words),
+    Medium 5–6 (984), Hard 7+ (166, with par + 2 steps allowed).
+  - **Hint engine:** `engine/hints.ts` `nextHint(ladder, dict)` follows `nextOnShortestPath`, skipping used words.
+    `describeHint(hint, 1|2)` gives "Swap an S for a G" or "Try WORD".
+  - **Hint flow in `mountGame`:** the first press at a word gives level 1, the second gives level 2, and a third repeats the word
+    for free. The banner hides once the ladder moves on.
+  - **Hint budgets:** a `HintBudget` (`remaining`/`spend`) supplies hints. Daily = `DAILY_HINTS` (2) minus `TodayRecord.hints`.
+    Unlimited = the run's bank, +1 for each solve at or under par, starting at 0.
+  - **`mountGame` additions:**
+    - Options: `maxSteps` (hides Undo/Restart, shows "Steps n / max"), `onLose(state, 'outOfSteps'|'forfeit')`,
+      `initialForfeited` and `resultActions(outcome, game)`. The default result action is "Try again" after a win.
+    - Handle: `outcome()` and `forfeit()`.
+    - A lost result shows "One way: …" via `shortestPath`.
+  - **Unlimited page:** `unlimited.html` + `src/unlimited.ts`. The run is saved in `miggle.unlimited` (`unlimited-record.ts`,
+    replay-validated) and stats in `miggle.unlimitedStats` (per difficulty: solved, at or under par, best streak).
+  - **Unlimited flow:**
+    - Switching difficulty with a live streak or a puzzle in progress asks first (`confirmModal` in `ui/modals.ts`).
+    - GIVE UP asks first, then `forfeit()`.
+    - A lost run offers "Start a new run".
+  - **Shared bootstrap:** `src/page.ts` `setupPage(actions)` holds the CSS imports, the clock override and the header wiring, plus
+    `showLoadError`. A Daily | Unlimited tab row sits under the header on both pages.
+  - **Build:** Vite is multi-page (`build.rollupOptions.input`: `index.html`, `unlimited.html`).
 - **Tooling facts (Session 1):** Vite 8, TypeScript 6 (strict, `noUncheckedIndexedAccess`), Vitest 5, ESLint 10 flat config
   (`eslint.config.js`, typescript-eslint + eslint-config-prettier), Prettier 3 (single quotes, width 100; `CLAUDE.md` is
   prettier-ignored). ESLint forbids `window`/`document`/`localStorage`/`navigator` in `src/engine/**`.
@@ -340,6 +364,6 @@ Word-suggestion feedback form, archive replay of past dailies, accounts or cloud
 | 3 Engine | ✅ done 2026-10-24 | Pure engine in `src/engine/` (words, rules, solver, daily, scoring, share), with no DOM access (enforced by ESLint). 85 tests: a fixture dictionary plus real data, every daily word's shortest path equals its par and validates step by step, the §2 ladders, UTC reset, leap-day and time-zone edges, and duplicate letters (MIGGLE, ILLUME, GIGGLE). Engine coverage is 100% of lines and 99% of branches. Added `@vitest/coverage-v8`, `npm run coverage`, `SITE_URL`, and `tests/helpers.ts`; `tests/data.test.ts` now reuses the engine's `neighbours`. **Deviations:** `validateStep(ladder, input, dict)` replaces the plan's `(prev, next, ladder)`, because the previous word is always the last one in the ladder. Result and error messages live in the engine (`STEP_ERROR_MESSAGES`, `resultMessage`) so daily and unlimited modes share them. Added `formatCountdown`, `dayStart` and `streakShareText`. **Follow-ups:** set the real `SITE_URL` (Session 8); the stats histogram needs an "under par" bucket, because extra can be negative (Session 5). |
 | 4 Game UI | ✅ done 2026-10-24 | Daily puzzle playable end to end. Added `src/engine/game.ts` (state machine, 7 tests) and `ui/` `board`, `keyboard`, `messages` (toast in an aria-live region), `animations` (shake, pop, bounce, fireworks that are skipped under reduced motion) and `play.ts` (shared controller). Checked in headless Chromium at 360×740 and 360×640 (light and dark) and 1280×800: all error toasts and shakes, input capped at 6, on-screen and physical keys, the new-letter marker, undo/restart, a par win ("Perfect! 5 steps 🥸"), an under-par win with fireworks, no horizontal overflow, no console errors. **Deviations:** removed the footer and tagline from the game page to fit a pinned keyboard (About/Privacy links come back in Session 7, e.g. in a header menu); `--tile-size` now fits 6 tiles inside the gutters at 360px; an inline result panel with "Try again" stands in until the Session 5 stats modal. **Follow-ups:** Session 5 needs `mountGame` to take an initial state and an `onChange` callback for persistence, plus header icon buttons (help, stats); Session 8 should add labelled tiles and keyboard focus checks. **Idea, not built:** a shortcut to copy the previous word into the input, since every step retypes 5 of the 6 letters. |
 | 5 Persistence/stats/share | ✅ done 2026-10-24 | Added `storage.ts`, `clock.ts`, `stats.ts`, `today.ts`, `restoreGame`/`isSolved`/`retryPrompt` in the engine, the modals (How to play, Stats, Yesterday's answer), Share result / Share streak, the countdown and in-place rollover. `mountGame` gained `initialState`, `onChange`, `onShare` and `getState()`/`retry()`. 119 tests; coverage now includes storage, stats and today (99.6% of lines). Browser-checked with `?date=`: first-visit help, reload keeps half-typed input, the win opens stats, the exact share text, a post-retry solve not counted, a solved day restored on reload, day 2 streak 2 with Yesterday's answer, a missed day resetting the streak to 0 (best kept), and a live rollover from #4 to #5 at 08:00 UTC. No console errors. **Bugs found and fixed:** keys were dropped, and an Enter swallowed, right after a modal closed (focus lingered in the closing `<dialog>`); the help legend layout; the focus ring on the close button. **Deviations:** the reset re-initialises in place instead of reloading the page; Stats auto-opens on reload when today is already solved; the inline result panel gained a Share button. **Follow-ups:** Session 6 hints need a `hints` field in `TodayRecord` and in the share text; Session 8 Playwright e2e can reuse the `?date=` flows above (wait for dialogs before pressing keys). |
-| 6 Hints + Unlimited | ⬜ | |
+| 6 Hints + Unlimited | ✅ done 2026-10-24 | Daily hints (2 a day, two levels, saved, 💡×N in the share text) and an Unlimited page (difficulty picker, random puzzles without repeats per run, streak, earned hint bank, Next word, GIVE UP with confirmation, Hard par + 2 limit, separate stats, saved runs). Both modes mount through the same `mountGame`; the shared page bootstrap is in `page.ts`. Data pipeline emits `unlimited.json` (daily data unchanged byte for byte). 142 tests; coverage 99.7% of lines. Browser-checked: both hint levels, the free repeat, the banner hiding, hints persisting over reload, the share flag, an Unlimited par solve earning a hint, Next word not repeating, reload mid-run, a difficulty switch with confirm, Hard out of steps, give up with cancel and confirm, give up persisting over reload, the stats tally, light and dark at 360px, no console errors. **Deviations:** Hard hides Undo/Restart (otherwise the step limit could be dodged); the hint bank starts at 0 and is earned deterministically (Feetle rolls for it); Unlimited has no share button; unlimited pool words can also appear as future daily words. **Follow-ups:** hint and solution paths can include `daily-exclude` words (e.g. BURTON, BOURNE); consider steering `nextOnShortestPath` away from them (data or solver); toasts at a fixed 22dvh can overlap the puzzle info on Unlimited; Session 7 needs `unlimited.html` in the sitemap and About links. |
 | 7 Content/SEO/PWA | ⬜ | |
 | 8 Polish/QA/deploy | ⬜ | |
