@@ -1,16 +1,80 @@
+/* ---------------------------------------------------------------- layout */
+
+.game {
+  min-height: 0;
+  padding-block: var(--space-2) var(--space-2);
+  gap: var(--space-2);
+}
+
+.status-message {
+  margin: auto 0 var(--space-4);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.status-message + .btn {
+  margin-bottom: auto;
+}
+
+.puzzle-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  width: 100%;
+}
+
+.puzzle-meta {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.puzzle-meta strong {
+  color: var(--text);
+}
+
+.goal {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.goal-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.board-scroller {
+  flex: 1;
+  min-height: calc(var(--tile-size) * 2 + var(--tile-gap));
+  width: 100%;
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+  padding-block: var(--space-1);
+}
+
+/* ---------------------------------------------------------------- tiles */
+
 .board {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--tile-gap);
+  height: max-content;
 }
 
 .row {
   display: grid;
   grid-template-columns: repeat(6, var(--tile-size));
-  gap: var(--space-2);
+  gap: var(--tile-gap);
 }
 
 .tile {
+  position: relative;
   display: grid;
   place-items: center;
   width: var(--tile-size);
@@ -21,6 +85,7 @@
   font-family: var(--font-display);
   font-weight: 600;
   font-size: calc(var(--tile-size) * 0.5);
+  line-height: 1;
   text-transform: uppercase;
   user-select: none;
 }
@@ -43,8 +108,298 @@
   color: var(--tile-grey-ink);
 }
 
-.board-note {
-  margin: var(--space-6) 0 0;
+/* The letter swapped in at this step. */
+.tile[data-new]::after {
+  content: '';
+  position: absolute;
+  bottom: calc(var(--tile-size) * 0.08);
+  left: 50%;
+  width: calc(var(--tile-size) * 0.32);
+  height: 3px;
+  border-radius: 2px;
+  background: currentColor;
+  transform: translateX(-50%);
+}
+
+.tile[data-filled] {
+  border-color: var(--text-muted);
+}
+
+.tile[data-cursor] {
+  border-color: var(--accent);
+}
+
+.row--mini {
+  --tile-size: 22px;
+  --tile-gap: 3px;
+}
+
+.row--mini .tile {
+  border-width: 1px;
+  border-radius: 4px;
+  font-size: 0.8125rem;
+}
+
+/* ---------------------------------------------------------------- controls & result */
+
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.controls .btn {
+  min-height: 36px;
+  padding-inline: var(--space-3);
+  font-size: 0.875rem;
+}
+
+.step-counter {
+  margin: 0;
+  font-size: 0.875rem;
   color: var(--text-muted);
+}
+
+.step-counter strong {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  color: var(--text);
+}
+
+.result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  width: 100%;
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
   text-align: center;
+}
+
+.result[hidden],
+.controls[hidden] {
+  display: none;
+}
+
+.result-message {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.result-detail {
+  margin: 0 0 var(--space-2);
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+/* ---------------------------------------------------------------- keyboard */
+
+.keyboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.keyboard-row {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+}
+
+.key {
+  flex: 1 1 0;
+  max-width: 44px;
+  height: var(--key-height);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--key-bg);
+  color: var(--key-ink);
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.key--wide {
+  flex-grow: 1.6;
+  max-width: 72px;
+  font-size: 0.8125rem;
+}
+
+.key--wide[data-key='BACKSPACE'] {
+  font-size: 1.25rem;
+}
+
+/* Letters of MIGUEL. */
+.key--target {
+  box-shadow: inset 0 -3px 0 var(--tile-green);
+}
+
+.key:active:not(:disabled) {
+  filter: brightness(0.9);
+}
+
+.key:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@media (max-height: 640px) {
+  :root {
+    --key-height: 44px;
+  }
+}
+
+/* ---------------------------------------------------------------- toast */
+
+.toasts {
+  position: fixed;
+  top: 22dvh;
+  left: 50%;
+  z-index: 10;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.toast {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--text);
+  color: var(--bg);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  text-align: center;
+  white-space: nowrap;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.2);
+  animation: toast-in 150ms ease-out;
+}
+
+.toast--leaving {
+  animation: toast-out 200ms ease-in forwards;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+/* ---------------------------------------------------------------- animations */
+
+.row.shake {
+  animation: shake 400ms ease-in-out;
+}
+
+@keyframes shake {
+  10%,
+  90% {
+    transform: translateX(-2px);
+  }
+  20%,
+  80% {
+    transform: translateX(4px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-7px);
+  }
+  40%,
+  60% {
+    transform: translateX(7px);
+  }
+}
+
+.row.pop .tile {
+  animation: pop 220ms ease-out backwards;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0.85);
+  }
+  60% {
+    transform: scale(1.06);
+  }
+}
+
+.row.bounce .tile {
+  animation: bounce 600ms ease-in-out backwards;
+  animation-delay: calc(var(--i, 0) * 90ms);
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-30%);
+  }
+  60% {
+    transform: translateY(4%);
+  }
+}
+
+.fireworks {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.spark {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  opacity: 0;
+  animation: spark 1100ms ease-out var(--delay) forwards;
+}
+
+.spark--0 {
+  background: var(--tile-green);
+}
+
+.spark--1 {
+  background: var(--tile-amber);
+}
+
+.spark--2 {
+  background: var(--accent);
+}
+
+@keyframes spark {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), calc(var(--dy) + 40px)) scale(0.4);
+  }
 }

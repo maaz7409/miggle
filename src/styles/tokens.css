@@ -38,7 +38,10 @@
   --space-6: 24px;
   --gutter: 16px;
   --max-width: 500px;
-  --tile-size: min(14vw, 56px);
+  --tile-gap: 6px;
+  /* Six tiles and five gaps fit inside the gutters on a 360px screen. */
+  --tile-size: min(calc((100vw - 2 * var(--gutter) - 5 * var(--tile-gap)) / 6), 52px);
+  --key-height: 54px;
 }
 
 @media (prefers-color-scheme: dark) {

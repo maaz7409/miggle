@@ -83,6 +83,54 @@ a {
   margin: 0;
 }
 
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-height: 40px;
+  padding: var(--space-2) var(--space-4);
+  border: 2px solid transparent;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.btn--primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.btn--ghost {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.btn--ghost:not(:disabled):hover {
+  background: var(--surface-2);
+}
+
+/* Game pages fill the viewport so the keyboard stays pinned to the bottom. */
+body.game-page {
+  height: 100dvh;
+}
+
+body.game-page .site-header {
+  padding-block: var(--space-3) var(--space-2);
+}
+
+body.game-page .wordmark {
+  font-size: clamp(1.75rem, 8vw, 2.25rem);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -15,20 +15,14 @@
     />
     <title>Miggle</title>
   </head>
-  <body>
+  <body class="game-page">
     <header class="site-header">
       <h1 class="wordmark">MIGGLE</h1>
-      <p class="tagline">A daily word ladder to MIGUEL</p>
     </header>
 
-    <main class="site-main">
-      <div id="board" class="board" role="group" aria-label="Game board"></div>
-      <p class="board-note">Today's puzzle is on its way.</p>
+    <main id="game" class="site-main game">
+      <p class="status-message">Loading today's puzzle…</p>
     </main>
-
-    <footer class="site-footer">
-      <p>Miggle 🥸 · Change one letter, shuffle, repeat.</p>
-    </footer>
 
     <script type="module" src="/src/main.ts"></script>
   </body>
