@@ -1,0 +1,13 @@
+# Words that stay valid steps but are never chosen as a daily start word.
+# One word per line; # starts a comment. Must be 6 letters.
+
+# Mostly read as names or places, even though ENABLE lists a lowercase sense
+afghan alaska apache apollo arabic bailey barlow batman billie bonnie bourne brazil
+burton caesar carmen carter cooper cyprus dalton danish daphne dexter french geneva
+gibson gloria graham harper holden hurley jesuit jordan joseph kelvin latino marcel
+martin morgan morris nelson newton nordic palmer parker pascal sabine sawyer scotia
+seneca sheila shelly slater spence stella surrey thorpe toledo warsaw weiner
+
+# Fine as a step, awkward as the puzzle of the day
+breast crotch douche fetish ghetto heroin nipple nudity racism racist seduce sexist
+sexual stoner uterus virgin

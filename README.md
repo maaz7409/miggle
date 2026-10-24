@@ -18,6 +18,29 @@ npm run lint       # ESLint + Prettier check
 npm run format     # apply Prettier
 npm run build      # type-check and build to dist/
 npm run preview    # serve the production build
+npm run data       # rebuild public/data/ from data-src/ (Python 3, stdlib only)
+```
+
+## Word data
+
+`scripts/build_data.py` turns the curated sources in `data-src/` into `public/data/words.json`
+(`{WORD: [fullDist, par|null]}`, where `-1` is a dead end) and `public/data/daily.json` (start words in
+puzzle order). The output is deterministic and committed, so building the site needs no network.
+
+| File                         | Purpose                                                           |
+| ---------------------------- | ----------------------------------------------------------------- |
+| `data-src/enable6.txt`       | 6-letter words from ENABLE: the accepted list                     |
+| `data-src/enable-bases.txt`  | 3–5 letter ENABLE words, used to spot plurals and -ed/-ing forms  |
+| `data-src/freq6.tsv`         | Zipf frequencies from wordfreq: decides the "common" tier (par)   |
+| `data-src/allowlist.txt`     | Forced into the common tier (e.g. the gate words next to MIGUEL)  |
+| `data-src/blocklist.txt`     | Removed entirely (slurs, profanity, awkward words)                |
+| `data-src/daily-exclude.txt` | Valid steps, but never a daily start word (names, awkward topics) |
+
+After editing a curation list, run `npm run data` and `npm test`. To refresh the sources:
+
+```sh
+python3 scripts/build_data.py --import-enable path/to/enable1.txt   # new ENABLE copy
+pip install wordfreq && python3 scripts/build_data.py --refresh-freq   # new frequencies
 ```
 
 ## Project layout
@@ -38,4 +61,8 @@ tests/              Vitest tests
 
 - Display font: [Fredoka](https://fonts.google.com/specimen/Fredoka) (SIL Open Font License),
   self-hosted via Fontsource.
-- Word list sources will be attributed here once the data pipeline lands.
+- Word list: [ENABLE](https://github.com/dolph/dictionary) (Enhanced North American Benchmark
+  Lexicon), public domain.
+- Word frequencies: [wordfreq](https://github.com/rspeer/wordfreq) by Robyn Speer. Its data is
+  licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/), and so is the derived
+  `data-src/freq6.tsv`.

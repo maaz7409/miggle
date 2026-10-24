@@ -131,7 +131,7 @@ Append ` 💡×N` to the first line if the player used hints.
     storage.ts, stats.ts, main.ts, unlimited.ts
     styles/          tokens.css, base.css, game.css
   scripts/build_data.py, scripts/gen_answers.ts
-  data-src/          raw word lists + blocklist.txt + allowlist.txt (curation)
+  data-src/          enable6.txt, freq6.tsv, enable-bases.txt + allowlist / blocklist / daily-exclude (curation)
   public/data/       words.json, daily.json (generated)
   tests/
   ```
@@ -139,8 +139,19 @@ Append ` 💡×N` to the first line if the player used hints.
 - **Commands** (keep this list current as they are added):
   - Available: `npm run dev`, `npm run build` (`tsc --noEmit` + `vite build`), `npm run preview`,
     `npm test` (Vitest, `tests/**/*.test.ts`), `npm run test:watch`, `npm run lint` (ESLint + `prettier --check`),
-    `npm run format` (Prettier write).
-  - Planned: `npm run data` (rebuilds the word data, Session 2), `npm run e2e` (Session 8).
+    `npm run format` (Prettier write), `npm run data` (`python3 scripts/build_data.py`; rebuilds `public/data/`).
+  - Planned: `npm run e2e` (Session 8).
+- **Word data facts (Session 2):**
+  - `public/data/words.json` is `{WORD: [fullDist, par|null]}` with UPPERCASE keys, and includes `MIGUEL: [0, 0]`.
+    `fullDist` is −1 for a dead end. `par` is null unless the word is common and reaches MIGUEL through common words.
+  - `daily.json` is a plain array of start words; puzzle #N uses index `(N−1) % len`.
+  - The common tier is wordfreq Zipf ≥ 3.0 plus the allowlist (about 3,400 words). There are 15,153 accepted words.
+  - Daily starts need Zipf ≥ 3.2, par 4–7, no plural/-ed/-ing form, and one word per anagram family. Each par bucket is
+    shuffled with seed 20261024 and the buckets are interleaved by smooth weighted round-robin. 1,362 puzzles (about 3.7 years).
+  - Curation lives in `data-src/`: `allowlist.txt`, `blocklist.txt` and `daily-exclude.txt` (names and awkward topics: still
+    valid steps, never a daily start). Frequencies are bundled in `data-src/freq6.tsv`, so builds are deterministic and need
+    no `wordfreq`. `--refresh-freq` and `--import-enable` regenerate the sources.
+  - With the larger common tier, some pars are lower than in §2's feasibility check, e.g. BRIDGE is par 3 via GLIDER → UGLIER.
 - **Tooling facts (Session 1):** Vite 8, TypeScript 6 (strict, `noUncheckedIndexedAccess`), Vitest 5, ESLint 10 flat config
   (`eslint.config.js`, typescript-eslint + eslint-config-prettier), Prettier 3 (single quotes, width 100; `CLAUDE.md` is
   prettier-ignored). ESLint forbids `window`/`document`/`localStorage`/`navigator` in `src/engine/**`.
@@ -267,7 +278,7 @@ Word-suggestion feedback form, archive replay of past dailies, accounts or cloud
 |---|---|---|
 | 0 Planning | ✅ done 2026-10-24 | Researched Feetle, Poople and clones. Chose the "change one letter + shuffle" rule because MIGUEL has no in-place neighbours. Wrote this plan. |
 | 1 Scaffold | ✅ done 2026-10-24 | Hand-written Vite vanilla-TS scaffold (no create-vite), Vitest/ESLint/Prettier wired, §3 folders (empty ones hold `.gitkeep`), `src/config.ts` (+ `STORAGE_PREFIX`; placeholder `EPOCH` = 2026-10-24 08:00 UTC), tokens/base/game CSS, placeholder page (wordmark, 5 empty rows + a green MIGUEL row, footer). Inline 🥸 SVG favicon until Session 7. Checked at 360px in light and dark. **Follow-ups:** a `SITE_URL` config value for the share text (Session 3/5); verify the amber/green tile contrast and colour-blind safety in Session 8. |
-| 2 Word data | ⬜ | |
+| 2 Word data | ✅ done 2026-10-24 | `scripts/build_data.py` + `npm run data`. Report: 15,153 accepted words (79 blocked), 3,398 common, 91 dead ends; common par histogram 1: 8 · 2: 25 · 3: 175 · 4: 670 · **5: 1,303 · 6: 795** · 7: 196 · 8+: 60; daily list 1,362 puzzles (par 4: 253 · 5: 578 · 6: 406 · 7: 125); `words.json` 257 KB raw / 55 KB gzip. Tests in `tests/data.test.ts` cover the BFS invariants for fullDist and par, gate words at [1, 1], the example ladders, daily-list rules, blocklist removal and size. **Deviations:** added `data-src/daily-exclude.txt`, a bundled `freq6.tsv` and `enable-bases.txt` (inflection filter), `@types/node`; daily Zipf floor lowered from 3.5 to 3.2 to reach three years. **Follow-ups:** freeze already-published days before any post-launch data rebuild, because `daily.json` order changes when curation changes (Session 8); the blocklist is a first pass, so review it again before launch; credit wordfreq (CC BY-SA 4.0) and ENABLE on the About page (Session 7); hints could avoid awkward-but-valid words (Session 6). |
 | 3 Engine | ⬜ | |
 | 4 Game UI | ⬜ | |
 | 5 Persistence/stats/share | ⬜ | |

@@ -1,0 +1,13 @@
+# Words forced into the accepted AND common tiers (they count towards par).
+# One word per line; # starts a comment. Must be 6 letters.
+
+# Gate words: one step from MIGUEL. Several fall just below the Zipf cut-off,
+# but they are the natural last step and should always count for par.
+mingle
+legume
+helium
+muesli
+gimlet
+milieu
+uglier
+illume
