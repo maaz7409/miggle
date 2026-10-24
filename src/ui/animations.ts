@@ -1,5 +1,9 @@
+/** The system preference, or the Settings toggle (data-motion on <html>). */
 export function prefersReducedMotion(): boolean {
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  return (
+    document.documentElement.dataset.motion === 'reduce' ||
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
 }
 
 /** (Re)start a CSS animation driven by `className`, even if it is already applied. */

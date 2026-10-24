@@ -1,4 +1,4 @@
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
@@ -19,7 +19,23 @@ function pages(): Record<string, string> {
   return input;
 }
 
+/** Inline src/early-settings.js at the top of every page's <head>, so themes apply before paint. */
+const earlySettings = {
+  name: 'miggle-early-settings',
+  transformIndexHtml: {
+    order: 'pre' as const,
+    handler: () => [
+      {
+        tag: 'script',
+        children: readFileSync(page('./src/early-settings.js'), 'utf8'),
+        injectTo: 'head-prepend' as const,
+      },
+    ],
+  },
+};
+
 export default defineConfig({
+  plugins: [earlySettings],
   build: {
     target: 'es2022',
     rollupOptions: {
@@ -37,6 +53,7 @@ export default defineConfig({
         'src/stats.ts',
         'src/today.ts',
         'src/unlimited-record.ts',
+        'src/settings.ts',
       ],
       reporter: ['text', 'html'],
       thresholds: { lines: 95, functions: 95, branches: 90, statements: 95 },

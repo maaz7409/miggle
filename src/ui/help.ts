@@ -76,8 +76,7 @@ function modeSection(mode: 'daily' | 'unlimited'): Node[] {
 
 export function openHelpModal(mode: 'daily' | 'unlimited' = 'daily'): ModalHandle {
   const demo = swapDemo();
-  const marked = createTile('U', 'green');
-  marked.dataset.new = '';
+  const marked = createTile('U', 'green', true);
   const resetLocal = new Date(dayStart(2)).toLocaleTimeString([], {
     hour: 'numeric',
     minute: '2-digit',

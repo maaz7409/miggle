@@ -21,3 +21,6 @@ playwright-report/
 /answers/
 /public/sitemap.xml
 /public/robots.txt
+/blob-report/
+.vercel
+.env*

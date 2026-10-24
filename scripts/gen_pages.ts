@@ -11,7 +11,7 @@ import { dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { loadEnv } from 'vite';
 import { parseDateParam } from '../src/clock';
-import { TARGET } from '../src/config';
+import { PUZZLE_TIME_ZONE, TARGET } from '../src/config';
 import { dayNumber, dayStart, startWord } from '../src/engine/daily';
 import { describeHint, nextHint } from '../src/engine/hints';
 import { changedLetter } from '../src/engine/rules';
@@ -49,7 +49,7 @@ export function rootPrefix(path: string): string {
 
 export function formatDate(day: number): string {
   return new Date(dayStart(day)).toLocaleDateString('en-GB', {
-    timeZone: 'UTC',
+    timeZone: PUZZLE_TIME_ZONE,
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -201,7 +201,9 @@ export function archivePage(ctx: SiteContext): PageSpec {
 }
 
 export function sitemap(ctx: SiteContext): string {
-  const isoDate = (day: number) => new Date(dayStart(day)).toISOString().slice(0, 10);
+  // en-CA formats as YYYY-MM-DD.
+  const isoDate = (day: number) =>
+    new Date(dayStart(day)).toLocaleDateString('en-CA', { timeZone: PUZZLE_TIME_ZONE });
   const urls = [
     '/',
     '/unlimited.html',

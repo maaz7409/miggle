@@ -1,6 +1,7 @@
 import { gzipSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
-import { TARGET, WORD_LEN } from '../src/config';
+import { EPOCH, TARGET, WORD_LEN } from '../src/config';
+import { DAY_MS } from '../src/engine/daily';
 import { neighbours } from '../src/engine/solver';
 import { sortedKey } from '../src/engine/words';
 import {
@@ -8,6 +9,7 @@ import {
   GATE_WORDS,
   curationList,
   daily,
+  readRepoFile,
   dailyRaw,
   realDict,
   wordData,
@@ -81,9 +83,20 @@ describe('daily.json', () => {
     }
   });
 
-  it('never starts on an excluded word', () => {
+  it('never starts on an excluded word, except in already-published (frozen) days', () => {
     const excluded = new Set(curationList('daily-exclude.txt'));
-    expect(daily.filter((w) => excluded.has(w))).toEqual([]);
+    // Mirrors freeze_published() in build_data.py: published days + FREEZE_AHEAD_DAYS (2).
+    const published = Math.max(0, Math.floor((Date.now() - EPOCH) / DAY_MS) + 1) + 2;
+    expect(daily.slice(published).filter((w) => excluded.has(w))).toEqual([]);
+  });
+});
+
+describe('build_data.py', () => {
+  it('freezes published days from the same launch instant as EPOCH', () => {
+    const py = readRepoFile('scripts/build_data.py');
+    const m = py.match(/LAUNCH_UTC = datetime\.datetime\((\d+), (\d+), (\d+), (\d+), (\d+)/)!;
+    const [y, mo, d, h, mi] = m.slice(1).map(Number) as [number, number, number, number, number];
+    expect(Date.UTC(y, mo - 1, d, h, mi)).toBe(EPOCH);
   });
 });
 

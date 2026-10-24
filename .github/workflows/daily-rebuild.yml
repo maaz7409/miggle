@@ -1,0 +1,22 @@
+name: Daily rebuild
+
+# A new puzzle goes live at 00:00 IST (18:30 UTC). Rebuilding shortly after publishes its answers
+# page and adds it to the archive and sitemap (they are generated at build time).
+on:
+  schedule:
+    - cron: '35 18 * * *'
+  workflow_dispatch:
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger a Vercel production build
+        env:
+          HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::error::Set the VERCEL_DEPLOY_HOOK_URL repository secret (see README)."
+            exit 1
+          fi
+          curl --fail --silent --show-error -X POST "$HOOK"

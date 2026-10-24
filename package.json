@@ -14,10 +14,12 @@
     "format": "prettier --write .",
     "data": "python3 scripts/build_data.py",
     "coverage": "vitest run --coverage",
-    "pages": "tsx scripts/gen_pages.ts"
+    "pages": "tsx scripts/gen_pages.ts",
+    "e2e": "playwright test"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.1",
     "@types/node": "^26.6.5",
     "@vitest/coverage-v8": "^5.0.5",
     "eslint": "^10.13.0",
@@ -33,5 +35,8 @@
   },
   "dependencies": {
     "@fontsource-variable/fredoka": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

@@ -7,6 +7,7 @@ import { shareText, streakShareText } from './engine/share';
 import { loadGameData, type Dictionary } from './engine/words';
 import { currentStreak, loadStats, recordWin, saveStats } from './stats';
 import { headerButton, setupPage, showLoadError } from './page';
+import { loadSettings } from './settings';
 import { readJson, writeJson } from './storage';
 import { loadToday, saveToday, type TodayRecord } from './today';
 import { openHelpModal } from './ui/help';
@@ -48,7 +49,8 @@ function shareResult(): void {
   const ladder = solvedLadder();
   if (!current || !ladder) return;
   const { day, par, record } = current;
-  void share(shareText({ day, ladder, par, hints: record.hints }));
+  const { highContrast } = loadSettings();
+  void share(shareText({ day, ladder, par, hints: record.hints, highContrast }));
 }
 
 function shareStreak(): void {

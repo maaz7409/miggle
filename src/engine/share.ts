@@ -8,6 +8,13 @@ export const TILE_EMOJI: Readonly<Record<TileColour, string>> = {
   grey: '⬜',
 };
 
+/** Colour-blind friendly palette, matching the high-contrast tiles. */
+export const TILE_EMOJI_HIGH_CONTRAST: Readonly<Record<TileColour, string>> = {
+  green: '🟧',
+  amber: '🟦',
+  grey: '⬜',
+};
+
 /**
  * Wordle-style colours against `target`: green = right letter in the right place, amber = letter
  * elsewhere in the target (counting duplicates, greens claimed first), grey = not (or no more) in it.
@@ -35,14 +42,23 @@ export interface ShareInput {
   par: number;
   hints?: number;
   url?: string;
+  highContrast?: boolean;
 }
 
 /** Spoiler-free result: header, one emoji row per word, then the site URL. */
-export function shareText({ day, ladder, par, hints = 0, url = SITE_URL }: ShareInput): string {
+export function shareText({
+  day,
+  ladder,
+  par,
+  hints = 0,
+  url = SITE_URL,
+  highContrast = false,
+}: ShareInput): string {
+  const emoji = highContrast ? TILE_EMOJI_HIGH_CONTRAST : TILE_EMOJI;
   const header = `Miggle #${day} ${ladder.length - 1}/${par} 🥸${hints > 0 ? ` 💡×${hints}` : ''}`;
   const rows = ladder.map((w) =>
     tileColours(w)
-      .map((c) => TILE_EMOJI[c])
+      .map((c) => emoji[c])
       .join(''),
   );
   return [header, ...rows, url].join('\n');

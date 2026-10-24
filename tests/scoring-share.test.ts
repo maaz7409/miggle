@@ -74,6 +74,13 @@ describe('shareText', () => {
   });
 });
 
+describe('high-contrast share', () => {
+  it('swaps green/amber for orange/blue', () => {
+    const text = shareText({ day: 1, ladder: ['MIGGLE', 'MIGUEL'], par: 1, highContrast: true });
+    expect(text.split('\n').slice(1, 3)).toEqual(['🟧🟧🟧⬜🟦🟦', '🟧🟧🟧🟧🟧🟧']);
+  });
+});
+
 describe('streakShareText', () => {
   it('brags about the streak', () => {
     expect(streakShareText(5, 9, 'https://x.test')).toBe(

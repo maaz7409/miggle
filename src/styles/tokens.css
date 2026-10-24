@@ -18,7 +18,7 @@
 
   --tile-empty: var(--surface);
   --tile-empty-border: var(--border);
-  --tile-green: #23884c;
+  --tile-green: #21844a;
   --tile-green-ink: #ffffff;
   --tile-amber: #e3a21a;
   --tile-amber-ink: #2b2130;
@@ -55,7 +55,6 @@
     --border: #3b3344;
     --accent: #b98cf0;
     --accent-ink: #1a1220;
-    --tile-green: #2f9a5a;
     --tile-amber: #e6ad2e;
     --tile-grey: #4f4856;
     --key-bg: #3a3243;
@@ -72,8 +71,15 @@
   --border: #3b3344;
   --accent: #b98cf0;
   --accent-ink: #1a1220;
-  --tile-green: #2f9a5a;
   --tile-amber: #e6ad2e;
   --tile-grey: #4f4856;
   --key-bg: #3a3243;
+}
+
+/* Colour-blind friendly tiles (Settings): orange = right spot, blue = elsewhere. */
+:root[data-contrast='high'] {
+  --tile-green: #f5793a;
+  --tile-green-ink: #1a1220;
+  --tile-amber: #85c0f9;
+  --tile-amber-ink: #1a1220;
 }

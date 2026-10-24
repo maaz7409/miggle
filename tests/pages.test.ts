@@ -91,6 +91,7 @@ describe('archive, sitemap and robots', () => {
       expect(xml).toContain(`<loc>https://x.test${path}</loc>`);
     }
     expect(xml).not.toContain('/answers/6/');
+    expect(xml).toContain('/answers/1/</loc><lastmod>2026-10-25</lastmod>');
     expect(robots(ctx)).toContain('Sitemap: https://x.test/sitemap.xml');
   });
 });
@@ -106,7 +107,7 @@ describe('content fragments', () => {
     expect(html).toContain('aria-label="MUESLI"');
   });
 
-  it('dates puzzles by their UTC reset day', () => {
-    expect(formatDate(1)).toBe('Saturday, 24 October 2026');
+  it('dates puzzles by their IST calendar day', () => {
+    expect(formatDate(1)).toBe('Sunday, 25 October 2026');
   });
 });

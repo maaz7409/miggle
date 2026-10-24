@@ -23,6 +23,13 @@ import {
   writeJson,
   type KeyValueStore,
 } from '../src/storage';
+import {
+  DEFAULT_SETTINGS,
+  applySettings,
+  loadSettings,
+  sanitizeSettings,
+  saveSettings,
+} from '../src/settings';
 import { freshToday, loadToday, saveToday } from '../src/today';
 import { loadUnlimited, recordFor, saveUnlimited } from '../src/unlimited-record';
 import { realDict } from './helpers';
@@ -318,5 +325,23 @@ describe('unlimited stats', () => {
     });
     expect(s?.easy.solved).toBe(1);
     expect(s?.hard).toEqual({ solved: 0, perfect: 0, bestStreak: 0 });
+  });
+});
+
+describe('settings', () => {
+  it('round-trips and defaults anything unexpected', () => {
+    expect(loadSettings()).toEqual(DEFAULT_SETTINGS);
+    saveSettings({ theme: 'dark', highContrast: true, reduceMotion: true });
+    expect(loadSettings()).toEqual({ theme: 'dark', highContrast: true, reduceMotion: true });
+    expect(sanitizeSettings({ theme: 'neon', highContrast: 'yes' })).toEqual(DEFAULT_SETTINGS);
+    expect(sanitizeSettings(null)).toBeNull();
+  });
+
+  it('reflects settings as data attributes on <html>', () => {
+    const root = { dataset: {} as DOMStringMap } as HTMLElement;
+    applySettings({ theme: 'light', highContrast: true, reduceMotion: true }, root);
+    expect({ ...root.dataset }).toEqual({ theme: 'light', contrast: 'high', motion: 'reduce' });
+    applySettings(DEFAULT_SETTINGS, root);
+    expect({ ...root.dataset }).toEqual({});
   });
 });

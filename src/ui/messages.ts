@@ -19,10 +19,34 @@ export function showToast(text: string, durationMs = 1800): void {
   const toast = document.createElement('div');
   toast.className = 'toast';
   toast.textContent = text;
-  toastRegion().replaceChildren(toast);
+  const region = toastRegion();
+  // Just below the puzzle info, so the message never covers the subheader or goal strip.
+  const anchor = document.querySelector('dialog[open]')
+    ? null
+    : document.querySelector('.board-scroller')?.getBoundingClientRect();
+  region.style.top = anchor ? `${Math.round(anchor.top) + 8}px` : '';
+  region.replaceChildren(toast);
   window.clearTimeout(hideTimer);
   hideTimer = window.setTimeout(() => {
     toast.classList.add('toast--leaving');
     toast.addEventListener('animationend', () => toast.remove(), { once: true });
   }, durationMs);
+}
+
+let announcer: HTMLElement | undefined;
+
+/** Read `text` to screen-reader users without showing anything. */
+export function announce(text: string): void {
+  if (!announcer) {
+    announcer = document.createElement('div');
+    announcer.className = 'sr-only';
+    announcer.setAttribute('aria-live', 'polite');
+    document.body.append(announcer);
+  }
+  const el = announcer;
+  el.textContent = '';
+  // A fresh text node after a tick makes repeated messages announce again.
+  window.setTimeout(() => {
+    el.textContent = text;
+  }, 50);
 }

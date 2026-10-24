@@ -16,12 +16,17 @@ the result may be any rearrangement. See CLAUDE.md §2.
 Standard library only. Maintenance flags:
   --import-enable PATH  regenerate data-src/enable6.txt from a full ENABLE word list
   --refresh-freq        regenerate data-src/freq6.tsv (requires the `wordfreq` package)
+  --unfreeze            rebuild the whole daily list (only safe before launch)
+
+Published days are frozen: the start words for every puzzle up to today (+ FREEZE_AHEAD_DAYS) are
+kept from the existing daily.json, so curation changes never alter a puzzle people have played.
 """
 
 from __future__ import annotations
 
 import argparse
 import collections
+import datetime
 import gzip
 import json
 import random
@@ -42,6 +47,10 @@ DAILY_PAR = range(4, 8)  # par 4..7 inclusive
 UNLIMITED_MIN_PAR = 3
 DAILY_MIN_LEN = 3 * 365 + 1  # at least three years of puzzles
 DAILY_SEED = 20261024
+
+# Mirrors EPOCH in src/config.ts (puzzle #1: 25 Oct 2026 00:00 IST); tests/data.test.ts checks it.
+LAUNCH_UTC = datetime.datetime(2026, 10, 24, 18, 30, tzinfo=datetime.timezone.utc)
+FREEZE_AHEAD_DAYS = 2  # also freeze puzzles that may already be cached or pre-built
 
 ENABLE6 = SRC / "enable6.txt"
 FREQ = SRC / "freq6.tsv"
@@ -244,6 +253,20 @@ def build_daily(
     return smooth_round_robin(dict(sorted(by_par.items())))
 
 
+def freeze_published(daily: list[str], previous: list[str], accepted: set[str]) -> list[str]:
+    """Keep the already-published prefix of `previous`, then the new order for the rest."""
+    now = datetime.datetime.now(datetime.timezone.utc)
+    published = max(0, (now - LAUNCH_UTC) // datetime.timedelta(days=1) + 1)
+    frozen = previous[: published + FREEZE_AHEAD_DAYS]
+    if missing := [w for w in frozen if w not in accepted]:
+        sys.exit(
+            f"published daily words are no longer accepted: {missing}. "
+            "Allowlist them or decide how to handle those puzzles."
+        )
+    taken = {key(w) for w in frozen}
+    return frozen + [w for w in daily if key(w) not in taken]
+
+
 # --------------------------------------------------------------------------- main
 
 
@@ -256,6 +279,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     ap.add_argument("--import-enable", type=Path, metavar="PATH")
     ap.add_argument("--refresh-freq", action="store_true")
+    ap.add_argument("--unfreeze", action="store_true")
     args = ap.parse_args()
     if args.import_enable:
         import_enable(args.import_enable)
@@ -282,6 +306,9 @@ def main() -> None:
     words = {w: [full.get(w, -1), par.get(w) if w in common else None] for w in sorted(accepted)}
     words[TARGET] = [0, 0]
     daily = build_daily(common, par, freq, bases, daily_exclude)
+    daily_path = OUT / "daily.json"
+    if daily_path.exists() and not args.unfreeze:
+        daily = freeze_published(daily, json.loads(daily_path.read_text()), accepted)
     if len(daily) < DAILY_MIN_LEN:
         sys.exit(f"daily list too short: {len(daily)} < {DAILY_MIN_LEN}")
 

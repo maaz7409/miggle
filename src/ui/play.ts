@@ -13,13 +13,14 @@ import {
 import { describeHint, nextHint, type HintLevel } from '../engine/hints';
 import { STEP_ERROR_MESSAGES } from '../engine/rules';
 import { plural, resultMessage, retryPrompt, scoreLadder, type Score } from '../engine/scoring';
+import { tileColours } from '../engine/share';
 import { shortestPath } from '../engine/solver';
 import type { Dictionary } from '../engine/words';
 import { fireworks, playAnimation } from './animations';
 import { createBoard, createTile } from './board';
 import { h } from './dom';
 import { bindPhysicalKeyboard, createKeyboard, type GameKey } from './keyboard';
-import { showToast } from './messages';
+import { announce, showToast } from './messages';
 
 export type Outcome = 'playing' | 'won' | 'lost';
 export type LossReason = 'outOfSteps' | 'forfeit';
@@ -264,6 +265,11 @@ export function mountGame(options: PlayOptions): PlayHandle {
       onLose?.(next, 'outOfSteps');
     } else {
       playAnimation(board.lastWordRow(), 'pop');
+      const colours = tileColours(result.word);
+      const count = (c: string) => colours.filter((x) => x === c).length;
+      announce(
+        `${result.word}, step ${stepsTaken(next)}: ${count('green')} in the right spot, ${count('amber')} elsewhere in ${TARGET}.`,
+      );
     }
   }
 
