@@ -20,7 +20,7 @@ function createRow(tiles: HTMLElement[], className = 'row'): HTMLDivElement {
 }
 
 /** A word in the ladder, coloured against the target, with the newly added letter marked. */
-function wordRow(word: string, prev: string | undefined): HTMLDivElement {
+export function wordRow(word: string, prev: string | undefined): HTMLDivElement {
   const colours = tileColours(word);
   const changed = prev === undefined ? null : changedLetter(prev, word);
   const tiles = [...word].map((ch, i) => {
@@ -32,6 +32,11 @@ function wordRow(word: string, prev: string | undefined): HTMLDivElement {
   const row = createRow(tiles, 'row row--word');
   row.setAttribute('aria-label', prev === undefined ? `Start: ${word}` : word);
   return row;
+}
+
+/** Read-only rows for a whole ladder (used by How to play and Yesterday's answer). */
+export function ladderRows(ladder: readonly string[]): HTMLDivElement[] {
+  return ladder.map((w, i) => wordRow(w, ladder[i - 1]));
 }
 
 function inputRow(input: string): HTMLDivElement {
@@ -57,7 +62,7 @@ export interface BoardView {
 export function createBoard(container: HTMLElement, scroller: HTMLElement): BoardView {
   return {
     render(state) {
-      const rows = state.ladder.map((w, i) => wordRow(w, state.ladder[i - 1]));
+      const rows = ladderRows(state.ladder);
       if (!state.won) rows.push(inputRow(state.input));
       container.replaceChildren(...rows);
     },

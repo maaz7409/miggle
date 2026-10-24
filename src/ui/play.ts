@@ -11,7 +11,7 @@ import {
   type GameState,
 } from '../engine/game';
 import { STEP_ERROR_MESSAGES } from '../engine/rules';
-import { resultMessage, scoreLadder, type Score } from '../engine/scoring';
+import { plural, resultMessage, retryPrompt, scoreLadder, type Score } from '../engine/scoring';
 import type { Dictionary } from '../engine/words';
 import { fireworks, playAnimation } from './animations';
 import { createBoard, createTile } from './board';
@@ -25,10 +25,20 @@ export interface PlayOptions {
   par: number;
   /** Shown before the par line, e.g. "#12". */
   label: string;
+  /** Resume a saved game (defaults to a fresh one from `start`). */
+  initialState?: GameState;
+  /** Called after every state change, e.g. to save progress. */
+  onChange?: (state: GameState) => void;
+  /** Called when a submitted word reaches MIGUEL (not when a won game is restored). */
   onWin?: (state: GameState, score: Score) => void;
+  /** Adds a Share button to the result panel. */
+  onShare?: () => void;
 }
 
 export interface PlayHandle {
+  getState(): GameState;
+  /** Restart after a win, nudging the player towards a better score. */
+  retry(): void;
   destroy(): void;
 }
 
@@ -53,15 +63,17 @@ const TEMPLATE = `
   <section class="result" data-ref="result" hidden>
     <p class="result-message" data-ref="resultMessage"></p>
     <p class="result-detail" data-ref="resultDetail"></p>
-    <button type="button" class="btn btn--primary" data-ref="again">Try again</button>
+    <div class="result-actions">
+      <button type="button" class="btn btn--primary" data-ref="share" hidden>Share</button>
+      <button type="button" class="btn btn--ghost" data-ref="again">Try again</button>
+    </div>
   </section>
   <div data-ref="keyboard"></div>
 `;
 
-const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
-
 /** Mount a playable ladder from `start` into `root`. Shared by the daily and unlimited modes. */
-export function mountGame({ root, dict, start, par, label, onWin }: PlayOptions): PlayHandle {
+export function mountGame(options: PlayOptions): PlayHandle {
+  const { root, dict, start, par, label, initialState, onChange, onWin, onShare } = options;
   root.innerHTML = TEMPLATE;
   const ref = <T extends HTMLElement = HTMLElement>(name: string) =>
     root.querySelector<T>(`[data-ref="${name}"]`)!;
@@ -77,11 +89,17 @@ export function mountGame({ root, dict, start, par, label, onWin }: PlayOptions)
   const undoBtn = ref<HTMLButtonElement>('undo');
   const restartBtn = ref<HTMLButtonElement>('restart');
 
-  let state = newGame(start);
+  let state = initialState ?? newGame(start);
 
   function update(next: GameState): void {
+    const changed = next !== state;
     state = next;
     board.render(state);
+    if (state.won) {
+      const score = scoreLadder(state.ladder, par);
+      ref('resultMessage').textContent = resultMessage(score);
+      ref('resultDetail').textContent = `${plural(score.steps, 'step')} · par ${par}`;
+    }
     ref('controls').hidden = state.won;
     ref('result').hidden = !state.won;
     keyboard.setEnabled(!state.won);
@@ -90,6 +108,14 @@ export function mountGame({ root, dict, start, par, label, onWin }: PlayOptions)
     restartBtn.disabled = state.ladder.length === 1 && state.input === '';
     // Last, once the panels around the board have their final size.
     board.scrollToEnd();
+    if (changed) onChange?.(state);
+  }
+
+  function retry(): void {
+    if (!state.won) return;
+    const prompt = retryPrompt(scoreLadder(state.ladder, par));
+    update(restart(state));
+    showToast(prompt, 2500);
   }
 
   function enter(): void {
@@ -106,12 +132,9 @@ export function mountGame({ root, dict, start, par, label, onWin }: PlayOptions)
       return;
     }
     const score = scoreLadder(next.ladder, par);
-    const message = resultMessage(score);
-    ref('resultMessage').textContent = message;
-    ref('resultDetail').textContent = `${plural(score.steps, 'step')} · par ${par}`;
     update(next);
     playAnimation(board.lastWordRow(), 'bounce');
-    showToast(message, 3000);
+    showToast(resultMessage(score), 3000);
     if (score.underPar) fireworks();
     onWin?.(next, score);
   }
@@ -128,14 +151,17 @@ export function mountGame({ root, dict, start, par, label, onWin }: PlayOptions)
   }
   undoBtn.addEventListener('click', () => update(undo(state)));
   restartBtn.addEventListener('click', () => update(restart(state)));
-  ref('again').addEventListener('click', () => {
-    update(restart(state));
-    showToast(`Can you solve it in ${plural(par, 'step')}?`);
-  });
+  ref('again').addEventListener('click', retry);
+  if (onShare) {
+    ref('share').hidden = false;
+    ref('share').addEventListener('click', onShare);
+  }
   const unbindKeys = bindPhysicalKeyboard(onKey);
 
   update(state);
   return {
+    getState: () => state,
+    retry,
     destroy() {
       unbindKeys();
       root.replaceChildren();

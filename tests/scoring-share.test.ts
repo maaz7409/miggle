@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SITE_URL } from '../src/config';
-import { resultMessage, scoreLadder } from '../src/engine/scoring';
+import { resultMessage, retryPrompt, scoreLadder } from '../src/engine/scoring';
 import { shareText, streakShareText, tileColours } from '../src/engine/share';
 
 const CASTLE_LADDER = ['CASTLE', 'CLAUSE', 'MUSCLE', 'MUESLI', 'MIGUEL'];
@@ -80,5 +80,18 @@ describe('streakShareText', () => {
       "🥸 I'm on a 5-day Miggle streak! (Best: 9) Can you keep up?\nhttps://x.test",
     );
     expect(streakShareText(1, 1)).toContain(SITE_URL);
+  });
+});
+
+describe('retryPrompt', () => {
+  it('nudges towards par, then under par', () => {
+    expect(retryPrompt(scoreLadder(CASTLE_LADDER, 3))).toBe('Can you solve it in 3 steps?');
+    expect(retryPrompt(scoreLadder(CASTLE_LADDER, 4))).toBe(
+      'Perfect! Now can you find a path under par?',
+    );
+    expect(retryPrompt(scoreLadder(CASTLE_LADDER, 5))).toBe('Under par! Can you find another way?');
+    expect(retryPrompt(scoreLadder(['MIGGLE', 'GIMLET', 'MIGUEL'], 1))).toBe(
+      'Can you solve it in 1 step?',
+    );
   });
 });

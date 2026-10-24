@@ -1,0 +1,237 @@
+/* ---------------------------------------------------------------- dialog shell */
+
+.modal {
+  width: min(440px, calc(100vw - 2 * var(--gutter)));
+  max-height: calc(100dvh - 2 * var(--gutter));
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 20px 60px rgb(0 0 0 / 0.3);
+  animation: modal-in 180ms ease-out;
+}
+
+.modal::backdrop {
+  background: rgb(20 14 26 / 0.55);
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    translate: 0 12px;
+  }
+}
+
+.modal-inner {
+  padding: var(--space-4) var(--space-4) var(--space-6);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.modal-header h2 {
+  margin: 0;
+  outline: none;
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 600;
+}
+
+.modal-body p {
+  margin: 0 0 var(--space-3);
+}
+
+.modal-body h3 {
+  margin: var(--space-4) 0 var(--space-2);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.board--compact {
+  --tile-size: 34px;
+  --tile-gap: 4px;
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.board--compact .tile {
+  font-size: 1rem;
+}
+
+/* ---------------------------------------------------------------- how to play */
+
+.rules {
+  margin: 0 0 var(--space-4);
+  padding-left: 1.2em;
+}
+
+.rules li + li {
+  margin-top: var(--space-1);
+}
+
+.demo {
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+
+.demo-stage {
+  min-height: 34px;
+  margin-bottom: var(--space-2);
+}
+
+.demo-caption {
+  margin: 0 !important;
+  text-align: center;
+  font-weight: 600;
+}
+
+.tile--out {
+  opacity: 0.35;
+  outline: 2px dashed var(--text);
+  outline-offset: 1px;
+}
+
+.legend {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.legend .row {
+  grid-template-columns: var(--tile-size);
+}
+
+/* ---------------------------------------------------------------- stats */
+
+.stats-result {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.stats-retry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  font-size: 0.875rem;
+}
+
+.stats-retry .btn {
+  flex-shrink: 0;
+  min-height: 34px;
+  padding-inline: var(--space-3);
+}
+
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-value {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.histogram {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.histogram li {
+  display: grid;
+  grid-template-columns: 3.25em 1fr;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.8125rem;
+}
+
+.histogram-label {
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.histogram-bar {
+  min-width: 1.75em;
+  width: var(--pct);
+  padding: 1px var(--space-2);
+  border-radius: 4px;
+  background: var(--tile-grey);
+  color: var(--tile-grey-ink);
+  font-weight: 700;
+  text-align: right;
+}
+
+.histogram-bar--today {
+  background: var(--tile-green);
+  color: var(--tile-green-ink);
+}
+
+.share-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.share-row:empty {
+  display: none;
+}
+
+.next-puzzle {
+  margin: var(--space-4) 0 0 !important;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.countdown {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.share-text {
+  width: 100%;
+  font: inherit;
+  font-size: 0.875rem;
+}

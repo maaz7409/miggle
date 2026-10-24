@@ -55,8 +55,11 @@ export function createKeyboard(container: HTMLElement, onKey: KeyHandler): Keybo
 export function bindPhysicalKeyboard(onKey: KeyHandler): () => void {
   const handler = (e: KeyboardEvent) => {
     if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return;
+    // While a modal is open, keys belong to it. (Checked via the open attribute, not the event
+    // target: focus can linger inside a dialog for a moment after it closes.)
+    if (document.querySelector('dialog[open]')) return;
     const target = e.target as HTMLElement | null;
-    if (target?.closest('input, textarea, select, [contenteditable="true"], dialog')) return;
+    if (target?.closest('input, textarea, select, [contenteditable="true"]')) return;
     // A focused button handles its own Enter/Space.
     if (target instanceof HTMLButtonElement && (e.key === 'Enter' || e.key === ' ')) return;
     let key: GameKey | null = null;

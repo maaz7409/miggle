@@ -140,7 +140,8 @@ Append ` 💡×N` to the first line if the player used hints.
   - Available: `npm run dev`, `npm run build` (`tsc --noEmit` + `vite build`), `npm run preview`,
     `npm test` (Vitest, `tests/**/*.test.ts`), `npm run test:watch`, `npm run lint` (ESLint + `prettier --check`),
     `npm run format` (Prettier write), `npm run data` (`python3 scripts/build_data.py`; rebuilds `public/data/`),
-    `npm run coverage` (Vitest + v8 coverage of `src/engine/**`; thresholds: 95% lines, functions and statements, 90% branches).
+    `npm run coverage` (Vitest + v8 coverage of `src/engine/**`, `storage.ts`, `stats.ts` and `today.ts`; thresholds: 95% lines,
+    functions and statements, 90% branches).
   - Planned: `npm run e2e` (Session 8).
 - **Word data facts (Session 2):**
   - `public/data/words.json` is `{WORD: [fullDist, par|null]}` with UPPERCASE keys, and includes `MIGUEL: [0, 0]`.
@@ -179,13 +180,36 @@ Append ` 💡×N` to the first line if the player used hints.
 - **UI (Session 4):**
   - `ui/play.ts` `mountGame({root, dict, start, par, label, onWin})` builds the whole game view (info, goal strip, board, controls,
     result panel, keyboard) into `root`. Daily and Unlimited both mount through it.
-  - `main.ts` only loads data and picks the day's word.
+  - `main.ts` holds the daily orchestration: data, day, today record, stats, modals and rollover (Session 5).
   - `ui/board.ts` re-renders every row on each update. Animations (`pop`, `bounce`, `shake`) are applied after rendering via
     `playAnimation`.
-  - `ui/keyboard.ts` provides the on-screen keyboard and `bindPhysicalKeyboard`. It ignores modifier keys, form fields and `<dialog>`.
+  - `ui/keyboard.ts` provides the on-screen keyboard and `bindPhysicalKeyboard`. It ignores modifier keys and form fields, and all keys while a `<dialog>` is open.
   - **Focus guard:** game buttons call `preventDefault` on `mousedown`, so a mouse click never leaves focus on a button that a physical
     Enter would press.
   - **Layout:** `body.game-page` is `100dvh` with the board scrolling internally and the keyboard pinned.
+- **Persistence, stats and modals (Session 5):**
+  - **Storage keys:** `miggle.today` (`{day, state, counted, solved}`), `miggle.stats` (`{wins, streak, bestStreak, lastWin, histogram}`)
+    and `miggle.seenIntro`.
+  - **Today record:** `today.ts` `loadToday` replays the saved ladder through `restoreGame` (engine). Another day, or any invalid
+    save, gives a fresh game.
+  - **Stats:** the histogram is keyed by raw extra steps (negative = under par). The display buckets are Under, Par, +1…+4 and
+    +5 or more. `currentStreak(stats, today)` stays alive until a whole puzzle day is missed.
+  - **First solve counts:** only the first solve of a day counts (`counted`). `solved` keeps that ladder, so it can still be
+    shared during a retry.
+  - **Clock:** `clock.ts` `now()` is the game clock. In dev only, `?date=YYYY-MM-DD` (noon UTC) or `?date=<ISO>` shifts it and it
+    keeps ticking. The override is stripped from production builds.
+  - **Rollover:** at the daily reset (timer, plus a check on `visibilitychange`), `main.ts` re-runs `startDay()` in place and
+    toasts "A new Miggle is here!". It does not reload the page.
+  - **Modals:** `ui/modals.ts` `openModal(title, nodes, onClose)` uses native `<dialog>`, one at a time.
+    - Closing removes the dialog synchronously; otherwise focus lingers on a button in the closed dialog and swallows the next Enter.
+    - Focus lands on the title.
+    - Toasts move into the open dialog so they render above it.
+    - Physical keys are ignored while a dialog is open.
+  - **Views:** `ui/help.ts` (rules, an animated MIGGLE → MIGUEL demo that is static under reduced motion, a legend, an example
+    ladder and the local reset time), `ui/stats-view.ts` and `ui/yesterday.ts`.
+  - **Sharing:** `ui/share.ts` `share(text)` tries `navigator.share` (coarse pointer only), then the clipboard, then
+    `execCommand('copy')`, then a manual-copy modal.
+  - **Helpers:** `ui/dom.ts` has an `h()` element builder. The header has help, yesterday and stats icon buttons.
 - **Tooling facts (Session 1):** Vite 8, TypeScript 6 (strict, `noUncheckedIndexedAccess`), Vitest 5, ESLint 10 flat config
   (`eslint.config.js`, typescript-eslint + eslint-config-prettier), Prettier 3 (single quotes, width 100; `CLAUDE.md` is
   prettier-ignored). ESLint forbids `window`/`document`/`localStorage`/`navigator` in `src/engine/**`.
@@ -315,7 +339,7 @@ Word-suggestion feedback form, archive replay of past dailies, accounts or cloud
 | 2 Word data | ✅ done 2026-10-24 | `scripts/build_data.py` + `npm run data`. Report: 15,153 accepted words (79 blocked), 3,398 common, 91 dead ends; common par histogram 1: 8 · 2: 25 · 3: 175 · 4: 670 · **5: 1,303 · 6: 795** · 7: 196 · 8+: 60; daily list 1,362 puzzles (par 4: 253 · 5: 578 · 6: 406 · 7: 125); `words.json` 257 KB raw / 55 KB gzip. Tests in `tests/data.test.ts` cover the BFS invariants for fullDist and par, gate words at [1, 1], the example ladders, daily-list rules, blocklist removal and size. **Deviations:** added `data-src/daily-exclude.txt`, a bundled `freq6.tsv` and `enable-bases.txt` (inflection filter), `@types/node`; daily Zipf floor lowered from 3.5 to 3.2 to reach three years. **Follow-ups:** freeze already-published days before any post-launch data rebuild, because `daily.json` order changes when curation changes (Session 8); the blocklist is a first pass, so review it again before launch; credit wordfreq (CC BY-SA 4.0) and ENABLE on the About page (Session 7); hints could avoid awkward-but-valid words (Session 6). |
 | 3 Engine | ✅ done 2026-10-24 | Pure engine in `src/engine/` (words, rules, solver, daily, scoring, share), with no DOM access (enforced by ESLint). 85 tests: a fixture dictionary plus real data, every daily word's shortest path equals its par and validates step by step, the §2 ladders, UTC reset, leap-day and time-zone edges, and duplicate letters (MIGGLE, ILLUME, GIGGLE). Engine coverage is 100% of lines and 99% of branches. Added `@vitest/coverage-v8`, `npm run coverage`, `SITE_URL`, and `tests/helpers.ts`; `tests/data.test.ts` now reuses the engine's `neighbours`. **Deviations:** `validateStep(ladder, input, dict)` replaces the plan's `(prev, next, ladder)`, because the previous word is always the last one in the ladder. Result and error messages live in the engine (`STEP_ERROR_MESSAGES`, `resultMessage`) so daily and unlimited modes share them. Added `formatCountdown`, `dayStart` and `streakShareText`. **Follow-ups:** set the real `SITE_URL` (Session 8); the stats histogram needs an "under par" bucket, because extra can be negative (Session 5). |
 | 4 Game UI | ✅ done 2026-10-24 | Daily puzzle playable end to end. Added `src/engine/game.ts` (state machine, 7 tests) and `ui/` `board`, `keyboard`, `messages` (toast in an aria-live region), `animations` (shake, pop, bounce, fireworks that are skipped under reduced motion) and `play.ts` (shared controller). Checked in headless Chromium at 360×740 and 360×640 (light and dark) and 1280×800: all error toasts and shakes, input capped at 6, on-screen and physical keys, the new-letter marker, undo/restart, a par win ("Perfect! 5 steps 🥸"), an under-par win with fireworks, no horizontal overflow, no console errors. **Deviations:** removed the footer and tagline from the game page to fit a pinned keyboard (About/Privacy links come back in Session 7, e.g. in a header menu); `--tile-size` now fits 6 tiles inside the gutters at 360px; an inline result panel with "Try again" stands in until the Session 5 stats modal. **Follow-ups:** Session 5 needs `mountGame` to take an initial state and an `onChange` callback for persistence, plus header icon buttons (help, stats); Session 8 should add labelled tiles and keyboard focus checks. **Idea, not built:** a shortcut to copy the previous word into the input, since every step retypes 5 of the 6 letters. |
-| 5 Persistence/stats/share | ⬜ | |
+| 5 Persistence/stats/share | ✅ done 2026-10-24 | Added `storage.ts`, `clock.ts`, `stats.ts`, `today.ts`, `restoreGame`/`isSolved`/`retryPrompt` in the engine, the modals (How to play, Stats, Yesterday's answer), Share result / Share streak, the countdown and in-place rollover. `mountGame` gained `initialState`, `onChange`, `onShare` and `getState()`/`retry()`. 119 tests; coverage now includes storage, stats and today (99.6% of lines). Browser-checked with `?date=`: first-visit help, reload keeps half-typed input, the win opens stats, the exact share text, a post-retry solve not counted, a solved day restored on reload, day 2 streak 2 with Yesterday's answer, a missed day resetting the streak to 0 (best kept), and a live rollover from #4 to #5 at 08:00 UTC. No console errors. **Bugs found and fixed:** keys were dropped, and an Enter swallowed, right after a modal closed (focus lingered in the closing `<dialog>`); the help legend layout; the focus ring on the close button. **Deviations:** the reset re-initialises in place instead of reloading the page; Stats auto-opens on reload when today is already solved; the inline result panel gained a Share button. **Follow-ups:** Session 6 hints need a `hints` field in `TodayRecord` and in the share text; Session 8 Playwright e2e can reuse the `?date=` flows above (wait for dialogs before pressing keys). |
 | 6 Hints + Unlimited | ⬜ | |
 | 7 Content/SEO/PWA | ⬜ | |
 | 8 Polish/QA/deploy | ⬜ | |

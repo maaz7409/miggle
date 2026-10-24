@@ -7,8 +7,10 @@ function toastRegion(): HTMLElement {
     region.className = 'toasts';
     region.setAttribute('role', 'status');
     region.setAttribute('aria-live', 'polite');
-    document.body.append(region);
   }
+  // An open modal <dialog> sits in the top layer, above anything in <body>.
+  const host = document.querySelector('dialog[open]') ?? document.body;
+  if (region.parentElement !== host) host.append(region);
   return region;
 }
 

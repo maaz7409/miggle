@@ -40,11 +40,70 @@ a {
 }
 
 .site-header {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   padding-block: var(--space-4) var(--space-3);
   border-bottom: 1px solid var(--border);
+}
+
+.header-side {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.header-side--end {
+  justify-content: flex-end;
+}
+
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text);
+  font-size: 1.125rem;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.icon-btn:not(:disabled):hover {
+  background: var(--surface-2);
+}
+
+.icon-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.icon-btn svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon-btn svg .fill {
+  fill: currentColor;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+/* Visually hidden but selectable (clipboard fallback). */
+.offscreen {
+  position: fixed;
+  top: 0;
+  left: -9999px;
+  opacity: 0;
 }
 
 .wordmark {

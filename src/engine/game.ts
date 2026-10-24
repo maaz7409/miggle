@@ -1,4 +1,4 @@
-import { WORD_LEN } from '../config';
+import { TARGET, WORD_LEN } from '../config';
 import { validateStep, type StepResult } from './rules';
 import type { Dictionary } from './words';
 
@@ -61,4 +61,28 @@ export function undo(state: GameState): GameState {
 
 export function restart(state: GameState): GameState {
   return newGame(state.start);
+}
+
+/**
+ * Rebuild a saved game for `start`, replaying every step through the rules so a corrupted save
+ * (or one made against an older word list) can never load. Returns null if anything is off.
+ */
+export function restoreGame(saved: unknown, start: string, dict: Dictionary): GameState | null {
+  if (typeof saved !== 'object' || saved === null) return null;
+  const { ladder, input } = saved as Partial<Record<keyof GameState, unknown>>;
+  if (!Array.isArray(ladder) || ladder[0] !== start) return null;
+  if (typeof input !== 'string' || !/^[A-Z]*$/.test(input) || input.length > WORD_LEN) return null;
+  let state = newGame(start);
+  for (const word of ladder.slice(1)) {
+    if (typeof word !== 'string' || state.won) return null;
+    const out = submit({ ...state, input: word }, dict);
+    if (!out.result?.ok) return null;
+    state = out.state;
+  }
+  return state.won ? state : { ...state, input };
+}
+
+/** True if `ladder` is a finished ladder (ends at MIGUEL). */
+export function isSolved(ladder: readonly string[]): boolean {
+  return ladder.at(-1) === TARGET;
 }
