@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @font-face {
+        font-family: 'Fredoka';
+        src: url('../../node_modules/@fontsource-variable/fredoka/files/fredoka-latin-wght-normal.woff2')
+          format('woff2-variations');
+        font-weight: 300 700;
+      }
+      html,
+      body {
+        margin: 0;
+      }
+      body {
+        width: 1200px;
+        height: 630px;
+        box-sizing: border-box;
+        padding: 64px 80px;
+        background: #fbf6ee;
+        color: #2b2130;
+        font-family: Fredoka, sans-serif;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 56px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 132px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        color: #7a3fb8;
+        line-height: 1;
+      }
+      p {
+        margin: 24px 0 0;
+        font-size: 44px;
+        font-weight: 500;
+        line-height: 1.2;
+      }
+      p.sub {
+        margin-top: 16px;
+        font-size: 34px;
+        color: #6e6273;
+      }
+      .ladder {
+        display: grid;
+        gap: 10px;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: repeat(6, 64px);
+        gap: 8px;
+      }
+      .t {
+        height: 64px;
+        display: grid;
+        place-items: center;
+        border-radius: 10px;
+        font-size: 34px;
+        font-weight: 600;
+        color: #fff;
+      }
+      .g {
+        background: #23884c;
+      }
+      .a {
+        background: #e3a21a;
+        color: #2b2130;
+      }
+      .x {
+        background: #7a7280;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <h1>MIGGLE</h1>
+      <p>A daily word ladder<br />to MIGUEL.</p>
+      <p class="sub">Swap a letter, shuffle, repeat.</p>
+    </div>
+    <!-- CASTLE → CLAUSE → MUSCLE → MUESLI → MIGUEL, coloured as in the game -->
+    <div class="ladder" id="ladder"></div>
+    <script>
+      const rows = [
+        ['CASTLE', 'xxxxaa'],
+        ['CLAUSE', 'xaxgxa'],
+        ['MUSCLE', 'gaxxaa'],
+        ['MUESLI', 'gaaxaa'],
+        ['MIGUEL', 'gggggg'],
+      ];
+      for (const [word, colours] of rows) {
+        const row = document.createElement('div');
+        row.className = 'row';
+        [...word].forEach((ch, i) => {
+          const t = document.createElement('div');
+          t.className = 't ' + colours[i];
+          t.textContent = ch;
+          row.append(t);
+        });
+        document.getElementById('ladder').append(row);
+      }
+    </script>
+  </body>
+</html>

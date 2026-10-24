@@ -66,7 +66,8 @@ export interface GameData {
   daily: readonly string[];
 }
 
-const DEFAULT_BASE = `${import.meta.env.BASE_URL}data/`;
+/** Lazy, so the engine can also be imported by Node scripts (no import.meta.env there). */
+const defaultBase = () => `${import.meta.env.BASE_URL}data/`;
 const cache = new Map<string, Promise<unknown>>();
 
 /** Fetch and cache one JSON file. A failed load is evicted from the cache so it can be retried. */
@@ -85,7 +86,7 @@ function fetchJson<T>(url: string, fetchFn: typeof fetch): Promise<T> {
 
 /** Fetch (once) words.json and daily.json from `baseUrl`. */
 export async function loadGameData(
-  baseUrl = DEFAULT_BASE,
+  baseUrl = defaultBase(),
   fetchFn: typeof fetch = fetch,
 ): Promise<GameData> {
   const [words, daily] = await Promise.all([
@@ -97,7 +98,7 @@ export async function loadGameData(
 
 /** Fetch (once) the Unlimited start-word pool. */
 export function loadUnlimitedPool(
-  baseUrl = DEFAULT_BASE,
+  baseUrl = defaultBase(),
   fetchFn: typeof fetch = fetch,
 ): Promise<readonly string[]> {
   return fetchJson<string[]>(`${baseUrl}unlimited.json`, fetchFn);

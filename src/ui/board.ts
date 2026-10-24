@@ -30,6 +30,7 @@ export function wordRow(word: string, prev: string | undefined): HTMLDivElement 
     return tile;
   });
   const row = createRow(tiles, 'row row--word');
+  row.setAttribute('role', 'img');
   row.setAttribute('aria-label', prev === undefined ? `Start: ${word}` : word);
   return row;
 }

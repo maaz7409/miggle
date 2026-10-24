@@ -4,6 +4,7 @@ import './styles/base.css';
 import './styles/game.css';
 import './styles/modals.css';
 import { initClock } from './clock';
+import { registerServiceWorker } from './sw-register';
 
 export type HeaderAction = 'help' | 'stats' | 'yesterday';
 
@@ -14,6 +15,7 @@ export function headerButton(action: HeaderAction): HTMLButtonElement | null {
 /** Shared start-up for every game page: dev clock override and the header buttons. */
 export function setupPage(actions: Partial<Record<HeaderAction, () => void>>): void {
   initClock(location.search);
+  registerServiceWorker();
   // A mouse click must not leave focus on a header button that a physical Enter would press.
   document.querySelector('.site-header')?.addEventListener('mousedown', (e) => e.preventDefault());
   for (const [action, run] of Object.entries(actions)) {

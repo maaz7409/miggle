@@ -55,17 +55,6 @@
   color: var(--text-muted);
 }
 
-.board--compact {
-  --tile-size: 34px;
-  --tile-gap: 4px;
-  align-items: center;
-  margin-bottom: var(--space-3);
-}
-
-.board--compact .tile {
-  font-size: 1rem;
-}
-
 /* ---------------------------------------------------------------- how to play */
 
 .rules {
@@ -271,4 +260,11 @@
 .tally td {
   font-family: var(--font-display);
   font-weight: 600;
+}
+
+/* Links inside the How to play modal. */
+.modal-links {
+  margin-top: var(--space-4) !important;
+  font-size: 0.875rem;
+  text-align: center;
 }

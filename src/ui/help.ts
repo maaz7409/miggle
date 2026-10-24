@@ -118,6 +118,15 @@ export function openHelpModal(mode: 'daily' | 'unlimited' = 'daily'): ModalHandl
         'Par is the fewest steps using everyday words. Rare words can sometimes beat it! ',
         `A new puzzle arrives every day at ${resetLocal} your time.`,
       ),
+      h(
+        'p',
+        { class: 'modal-links' },
+        h('a', { href: `${import.meta.env.BASE_URL}answers/` }, 'Past answers'),
+        ' · ',
+        h('a', { href: `${import.meta.env.BASE_URL}about.html` }, 'About'),
+        ' · ',
+        h('a', { href: `${import.meta.env.BASE_URL}privacy.html` }, 'Privacy'),
+      ),
     ],
     demo.stop,
   );

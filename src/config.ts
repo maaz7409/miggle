@@ -20,7 +20,7 @@ export const DAILY_HINTS = 2;
 export const STORAGE_PREFIX = 'miggle.';
 
 /**
- * Public URL printed at the end of share text.
- * Placeholder (.example is reserved); the production domain is set in Session 8.
+ * Public origin of the site, from VITE_SITE_URL in .env (also used by the page generator).
+ * Placeholder (.example is reserved) until the production domain is set in Session 8.
  */
-export const SITE_URL = 'https://miggle.example';
+export const SITE_URL: string = import.meta.env?.VITE_SITE_URL ?? 'https://miggle.example';

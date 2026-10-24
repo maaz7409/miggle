@@ -5,15 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Miggle is a daily word ladder. Change one letter, shuffle, and climb your way to MIGUEL."
+      content="Miggle is a daily word ladder. Swap one letter, shuffle, and climb from the start word to MIGUEL in as few steps as possible."
     />
+    <link rel="canonical" href="%VITE_SITE_URL%/" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Miggle" />
+    <meta property="og:title" content="Miggle: a daily word ladder to MIGUEL" />
+    <meta
+      property="og:description"
+      content="Miggle is a daily word ladder. Swap one letter, shuffle, and climb from the start word to MIGUEL in as few steps as possible."
+    />
+    <meta property="og:url" content="%VITE_SITE_URL%/" />
+    <meta property="og:image" content="%VITE_SITE_URL%/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="The Miggle logo beside a word ladder from CASTLE to MIGUEL"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="theme-color" content="#fbf6ee" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#16121b" media="(prefers-color-scheme: dark)" />
-    <link
-      rel="icon"
-      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥸</text></svg>"
-    />
-    <title>Miggle</title>
+    <title>Miggle: a daily word ladder to MIGUEL</title>
   </head>
   <body class="game-page">
     <header class="site-header">
@@ -52,11 +68,20 @@
     <nav class="mode-tabs" aria-label="Game mode">
       <a href="./" aria-current="page">Daily</a>
       <a href="./unlimited.html">Unlimited</a>
+      <a href="./answers/">Answers</a>
     </nav>
 
     <main id="game" class="site-main game">
       <p class="status-message">Loading today's puzzle…</p>
     </main>
+
+    <noscript>
+      <p class="status-message">
+        Miggle needs JavaScript to play. You can still read
+        <a href="./how-to-play.html">how to play</a> or browse
+        <a href="./answers/">past answers</a>.
+      </p>
+    </noscript>
 
     <script type="module" src="/src/main.ts"></script>
   </body>

@@ -240,6 +240,17 @@
   border-color: var(--accent);
 }
 
+.board--compact {
+  --tile-size: 34px;
+  --tile-gap: 4px;
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.board--compact .tile {
+  font-size: 1rem;
+}
+
 .row--mini {
   --tile-size: 22px;
   --tile-gap: 3px;

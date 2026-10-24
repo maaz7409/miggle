@@ -130,14 +130,16 @@ Append ` 💡×N` to the first line if the player used hints.
     ui/              board.ts, keyboard.ts, modals.ts, messages.ts, animations.ts
     storage.ts, stats.ts, main.ts, unlimited.ts
     styles/          tokens.css, base.css, game.css
-  scripts/build_data.py, scripts/gen_answers.ts
+  scripts/build_data.py, scripts/gen_pages.ts (was gen_answers.ts), scripts/render_images.mjs
+  content/           about / privacy / how-to-play body fragments (rendered by gen_pages.ts)
   data-src/          enable6.txt, freq6.tsv, enable-bases.txt + allowlist / blocklist / daily-exclude (curation)
   public/data/       words.json, daily.json (generated)
   tests/
   ```
 - **Engine code:** must stay pure and DOM-free, so it can be unit-tested.
 - **Commands** (keep this list current as they are added):
-  - Available: `npm run dev`, `npm run build` (`tsc --noEmit` + `vite build`), `npm run preview`,
+  - Available: `npm run dev` (runs `pages` first), `npm run build` (`pages` + `tsc --noEmit` + `vite build`), `npm run preview`,
+    `npm run pages` (`tsx scripts/gen_pages.ts`; `MIGGLE_TODAY=YYYY-MM-DD` pins the date),
     `npm test` (Vitest, `tests/**/*.test.ts`), `npm run test:watch`, `npm run lint` (ESLint + `prettier --check`),
     `npm run format` (Prettier write), `npm run data` (`python3 scripts/build_data.py`; rebuilds `public/data/`),
     `npm run coverage` (Vitest + v8 coverage of `src/engine/**`, `storage.ts`, `stats.ts`, `today.ts` and `unlimited-record.ts`; thresholds: 95% lines,
@@ -234,6 +236,27 @@ Append ` 💡×N` to the first line if the player used hints.
   - **Shared bootstrap:** `src/page.ts` `setupPage(actions)` holds the CSS imports, the clock override and the header wiring, plus
     `showLoadError`. A Daily | Unlimited tab row sits under the header on both pages.
   - **Build:** Vite is multi-page (`build.rollupOptions.input`: `index.html`, `unlimited.html`).
+- **Content, SEO and PWA (Session 7):**
+  - **Site URL:** `.env` `VITE_SITE_URL` (committed; placeholder `https://miggle.example`) is the single source. It feeds
+    `config.ts` `SITE_URL` (share text), `%VITE_SITE_URL%` canonical and `og:` tags in the game pages, and the generator.
+  - **Generator:** `scripts/gen_pages.ts` writes the following (all gitignored):
+    - `about.html`, `privacy.html` and `how-to-play.html` from the `content/*.html` fragments. In those, `{{root}}` becomes a
+      relative root link, and `<!-- ladder: A B C -->` is rendered with the engine's `tileColours`/`changedLetter`.
+    - `answers/index.html` (newest first, up to today) and `answers/<N>/index.html`. Each answer page has hints 1–3 and the full
+      path, all inside `<details>`; a test checks that no path word leaks outside them.
+    - `public/sitemap.xml` and `public/robots.txt`.
+  - **Vite inputs:** `vite.config.ts` collects every generated HTML file as an input.
+  - **Shared layout:** content pages share the `layout()` head (canonical, OG/Twitter, icons, manifest), the header, the
+    Daily | Unlimited | Answers tabs and a footer (How to play · Answers · About · Privacy). Their entry is `src/content.ts`.
+  - **Assets:** `public/favicon.svg` (hand-drawn M with a moustache) and `public/icons/*.png` + `public/og.png`, rendered by
+    `scripts/render_images.mjs` (needs `CHROME_PATH` or a Playwright Chromium). `public/site.webmanifest`.
+  - **Service worker:** `public/sw.js` (cache `miggle-v2`; bump `VERSION` for a breaking change).
+    - On install it precaches the core pages and data, plus the hashed assets they reference and the fonts in their CSS.
+    - Pages are network-first, `/assets/` is cache-first, and everything else is stale-while-revalidate.
+    - Matching uses `ignoreVary`, because precached responses carry `Vary: Origin` without the page's Origin header.
+    - Registered in production only (`src/sw-register.ts`, called from `page.ts` and `content.ts`).
+  - **Lighthouse (mobile, against `vite preview`):** 100/100/100/100 on `/`, `/unlimited.html`, `/how-to-play.html`,
+    `/about.html`, `/privacy.html`, `/answers/` and `/answers/3/`.
 - **Tooling facts (Session 1):** Vite 8, TypeScript 6 (strict, `noUncheckedIndexedAccess`), Vitest 5, ESLint 10 flat config
   (`eslint.config.js`, typescript-eslint + eslint-config-prettier), Prettier 3 (single quotes, width 100; `CLAUDE.md` is
   prettier-ignored). ESLint forbids `window`/`document`/`localStorage`/`navigator` in `src/engine/**`.
@@ -365,5 +388,5 @@ Word-suggestion feedback form, archive replay of past dailies, accounts or cloud
 | 4 Game UI | ✅ done 2026-10-24 | Daily puzzle playable end to end. Added `src/engine/game.ts` (state machine, 7 tests) and `ui/` `board`, `keyboard`, `messages` (toast in an aria-live region), `animations` (shake, pop, bounce, fireworks that are skipped under reduced motion) and `play.ts` (shared controller). Checked in headless Chromium at 360×740 and 360×640 (light and dark) and 1280×800: all error toasts and shakes, input capped at 6, on-screen and physical keys, the new-letter marker, undo/restart, a par win ("Perfect! 5 steps 🥸"), an under-par win with fireworks, no horizontal overflow, no console errors. **Deviations:** removed the footer and tagline from the game page to fit a pinned keyboard (About/Privacy links come back in Session 7, e.g. in a header menu); `--tile-size` now fits 6 tiles inside the gutters at 360px; an inline result panel with "Try again" stands in until the Session 5 stats modal. **Follow-ups:** Session 5 needs `mountGame` to take an initial state and an `onChange` callback for persistence, plus header icon buttons (help, stats); Session 8 should add labelled tiles and keyboard focus checks. **Idea, not built:** a shortcut to copy the previous word into the input, since every step retypes 5 of the 6 letters. |
 | 5 Persistence/stats/share | ✅ done 2026-10-24 | Added `storage.ts`, `clock.ts`, `stats.ts`, `today.ts`, `restoreGame`/`isSolved`/`retryPrompt` in the engine, the modals (How to play, Stats, Yesterday's answer), Share result / Share streak, the countdown and in-place rollover. `mountGame` gained `initialState`, `onChange`, `onShare` and `getState()`/`retry()`. 119 tests; coverage now includes storage, stats and today (99.6% of lines). Browser-checked with `?date=`: first-visit help, reload keeps half-typed input, the win opens stats, the exact share text, a post-retry solve not counted, a solved day restored on reload, day 2 streak 2 with Yesterday's answer, a missed day resetting the streak to 0 (best kept), and a live rollover from #4 to #5 at 08:00 UTC. No console errors. **Bugs found and fixed:** keys were dropped, and an Enter swallowed, right after a modal closed (focus lingered in the closing `<dialog>`); the help legend layout; the focus ring on the close button. **Deviations:** the reset re-initialises in place instead of reloading the page; Stats auto-opens on reload when today is already solved; the inline result panel gained a Share button. **Follow-ups:** Session 6 hints need a `hints` field in `TodayRecord` and in the share text; Session 8 Playwright e2e can reuse the `?date=` flows above (wait for dialogs before pressing keys). |
 | 6 Hints + Unlimited | ✅ done 2026-10-24 | Daily hints (2 a day, two levels, saved, 💡×N in the share text) and an Unlimited page (difficulty picker, random puzzles without repeats per run, streak, earned hint bank, Next word, GIVE UP with confirmation, Hard par + 2 limit, separate stats, saved runs). Both modes mount through the same `mountGame`; the shared page bootstrap is in `page.ts`. Data pipeline emits `unlimited.json` (daily data unchanged byte for byte). 142 tests; coverage 99.7% of lines. Browser-checked: both hint levels, the free repeat, the banner hiding, hints persisting over reload, the share flag, an Unlimited par solve earning a hint, Next word not repeating, reload mid-run, a difficulty switch with confirm, Hard out of steps, give up with cancel and confirm, give up persisting over reload, the stats tally, light and dark at 360px, no console errors. **Deviations:** Hard hides Undo/Restart (otherwise the step limit could be dodged); the hint bank starts at 0 and is earned deterministically (Feetle rolls for it); Unlimited has no share button; unlimited pool words can also appear as future daily words. **Follow-ups:** hint and solution paths can include `daily-exclude` words (e.g. BURTON, BOURNE); consider steering `nextOnShortestPath` away from them (data or solver); toasts at a fixed 22dvh can overlap the puzzle info on Unlimited; Session 7 needs `unlimited.html` in the sitemap and About links. |
-| 7 Content/SEO/PWA | ⬜ | |
+| 7 Content/SEO/PWA | ✅ done 2026-10-24 | Added the content pages, the answers archive and per-puzzle pages, meta/OG/Twitter tags, icons, OG image, manifest, service worker, sitemap and robots, the Answers tab, `<noscript>` text, and About/Privacy/Answers links in the How to play modal. Word rows now have `role="img"`. 150 tests (generator: tile colours, spoiler safety, archive order, sitemap, links). Lighthouse mobile: 100 in all four categories on all 7 page types. Offline check: after one visit, `/`, `/unlimited.html`, an answer page and How to play all load offline, and play works. **Bug found and fixed:** Unlimited failed offline because precached JS missed on `Vary: Origin`; fixed with `ignoreVary`. **Deviations:** the generator is `gen_pages.ts` and also renders About/Privacy/How to play from `content/` fragments (one layout, engine-coloured tiles); generated pages, sitemap and robots are gitignored and rebuilt by `npm run build`; the archive includes today's puzzle with everything behind `<details>`; `tsx` and `playwright-core` were added as dev deps; esbuild's postinstall is left unapproved (tsx works without it). **Follow-ups:** the archive only updates on rebuild, so Session 8 deploy needs a daily scheduled build after 08:00 UTC; set the real `VITE_SITE_URL` (Session 8); Lighthouse ran on localhost (no HTTP/2 or CDN), so re-check after deploy. |
 | 8 Polish/QA/deploy | ⬜ | |

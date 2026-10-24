@@ -1,0 +1,154 @@
+/* Static content pages: About, Privacy, How to play, Answers. */
+
+.site-header--simple {
+  display: flex;
+  justify-content: center;
+}
+
+.site-header--simple .wordmark {
+  text-decoration: none;
+}
+
+.article {
+  flex: 1;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--space-4) var(--gutter) var(--space-6);
+  line-height: 1.6;
+}
+
+.article h1 {
+  margin: var(--space-2) 0 var(--space-2);
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 7vw, 2.25rem);
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.article h2 {
+  margin: var(--space-6) 0 var(--space-2);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.article p,
+.article ul,
+.article ol {
+  margin: 0 0 var(--space-3);
+}
+
+.article li + li {
+  margin-top: var(--space-1);
+}
+
+.article .board--compact {
+  align-items: flex-start;
+}
+
+.lede {
+  font-size: 1.125rem;
+}
+
+.eyebrow {
+  margin: 0 !important;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.note {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+
+code {
+  font-size: 0.9em;
+}
+
+details {
+  margin-bottom: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+summary {
+  padding: var(--space-3);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+details .reveal {
+  padding: 0 var(--space-3) var(--space-3);
+}
+
+details.answer .reveal p:first-child {
+  font-family: var(--font-display);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.cta {
+  margin-top: var(--space-6) !important;
+  text-align: center;
+}
+
+.cta .btn {
+  text-decoration: none;
+}
+
+.pager {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.archive {
+  padding: 0;
+  list-style: none;
+}
+
+.archive li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0 var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.archive li + li {
+  margin-top: 0;
+}
+
+.archive span {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.legend {
+  padding: 0;
+  list-style: none;
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.legend .row {
+  grid-template-columns: var(--tile-size);
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-1) var(--space-4);
+  margin-bottom: var(--space-2);
+}

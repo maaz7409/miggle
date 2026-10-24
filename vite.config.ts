@@ -1,16 +1,29 @@
+import { existsSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
 const page = (file: string) => fileURLToPath(new URL(file, import.meta.url));
 
+/** Every HTML page: the two game pages plus those written by scripts/gen_pages.ts. */
+function pages(): Record<string, string> {
+  const input: Record<string, string> = {};
+  for (const name of ['index', 'unlimited', 'about', 'privacy', 'how-to-play']) {
+    if (existsSync(page(`./${name}.html`))) input[name] = page(`./${name}.html`);
+  }
+  if (existsSync(page('./answers'))) {
+    input.answers = page('./answers/index.html');
+    for (const day of readdirSync(page('./answers'))) {
+      if (/^\d+$/.test(day)) input[`answers-${day}`] = page(`./answers/${day}/index.html`);
+    }
+  }
+  return input;
+}
+
 export default defineConfig({
   build: {
     target: 'es2022',
     rollupOptions: {
-      input: {
-        main: page('./index.html'),
-        unlimited: page('./unlimited.html'),
-      },
+      input: pages(),
     },
   },
   test: {

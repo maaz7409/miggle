@@ -20,6 +20,7 @@ npm run format     # apply Prettier
 npm run build      # type-check and build to dist/
 npm run preview    # serve the production build
 npm run data       # rebuild public/data/ from data-src/ (Python 3, stdlib only)
+npm run pages      # generate content + answers pages, sitemap, robots (build runs this)
 ```
 
 ## Word data
@@ -49,6 +50,8 @@ pip install wordfreq && python3 scripts/build_data.py --refresh-freq   # new fre
 ```
 index.html          daily game page
 unlimited.html      Unlimited mode (Easy / Medium / Hard streaks)
+content/            About, Privacy and How to play body fragments
+scripts/gen_pages.ts  renders content pages, answers/ archive, sitemap.xml, robots.txt (gitignored output)
 src/config.ts       TARGET, WORD_LEN, EPOCH, RESET_HOUR_UTC
 src/engine/         pure game logic (no DOM)
 src/ui/             board, keyboard, modals, messages
@@ -58,6 +61,13 @@ data-src/           raw word lists and curation files
 public/data/        generated word data (committed)
 tests/              Vitest tests
 ```
+
+## Site URL, SEO and offline play
+
+Set the public origin in `.env` (`VITE_SITE_URL`). It is used for share text, canonical and Open
+Graph URLs, the sitemap and robots.txt. `public/sw.js` caches the game for offline play after the
+first visit. Icons and the Open Graph image are rendered from `public/favicon.svg` and
+`scripts/assets/` with `CHROME_PATH=... node scripts/render_images.mjs`.
 
 ## Credits
 
