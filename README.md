@@ -89,10 +89,10 @@ headers).
 - [x] Production `EPOCH`: puzzle #1 at 25 Oct 2026 00:00 IST (18:30 UTC), with a daily reset at
       midnight IST (`src/config.ts`, mirrored by `LAUNCH_UTC` in `scripts/build_data.py`).
 - [x] `VITE_SITE_URL` in `.env` points at the production URL.
-- [ ] Lint, unit tests, build and e2e pass in CI.
+- [x] Lint, unit tests, build and e2e pass in CI.
 - [x] Vercel project connected to GitHub; production branch `main`.
-- [ ] Daily rebuild hook stored as a GitHub secret, and the workflow triggered once by hand.
-- [ ] Live site checked: game, Unlimited, answers, offline play, share text URL.
+- [x] Daily rebuild hook stored as a GitHub secret, and the workflow triggered once by hand.
+- [x] Live site checked: game, Unlimited, answers, offline play, share text URL.
 - [ ] Review `data-src/blocklist.txt` and `daily-exclude.txt` once more with fresh eyes.
 - [ ] After launch, never run `npm run data -- --unfreeze`: published days are frozen
       automatically, and a removed word that was already published stops the build.
