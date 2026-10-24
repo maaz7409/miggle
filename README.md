@@ -14,6 +14,7 @@ Requires Node 20+.
 npm install
 npm run dev        # dev server
 npm test           # unit tests (Vitest)
+npm run coverage   # tests + engine coverage report
 npm run lint       # ESLint + Prettier check
 npm run format     # apply Prettier
 npm run build      # type-check and build to dist/

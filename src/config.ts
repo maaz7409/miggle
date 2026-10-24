@@ -15,3 +15,9 @@ export const EPOCH = Date.UTC(2026, 9, 24, RESET_HOUR_UTC);
 
 /** Prefix for every localStorage key. */
 export const STORAGE_PREFIX = 'miggle.';
+
+/**
+ * Public URL printed at the end of share text.
+ * Placeholder (.example is reserved); the production domain is set in Session 8.
+ */
+export const SITE_URL = 'https://miggle.example';

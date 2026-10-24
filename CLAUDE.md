@@ -139,7 +139,8 @@ Append ` 💡×N` to the first line if the player used hints.
 - **Commands** (keep this list current as they are added):
   - Available: `npm run dev`, `npm run build` (`tsc --noEmit` + `vite build`), `npm run preview`,
     `npm test` (Vitest, `tests/**/*.test.ts`), `npm run test:watch`, `npm run lint` (ESLint + `prettier --check`),
-    `npm run format` (Prettier write), `npm run data` (`python3 scripts/build_data.py`; rebuilds `public/data/`).
+    `npm run format` (Prettier write), `npm run data` (`python3 scripts/build_data.py`; rebuilds `public/data/`),
+    `npm run coverage` (Vitest + v8 coverage of `src/engine/**`; thresholds: 95% lines, functions and statements, 90% branches).
   - Planned: `npm run e2e` (Session 8).
 - **Word data facts (Session 2):**
   - `public/data/words.json` is `{WORD: [fullDist, par|null]}` with UPPERCASE keys, and includes `MIGUEL: [0, 0]`.
@@ -152,6 +153,26 @@ Append ` 💡×N` to the first line if the player used hints.
     valid steps, never a daily start). Frequencies are bundled in `data-src/freq6.tsv`, so builds are deterministic and need
     no `wordfreq`. `--refresh-freq` and `--import-enable` regenerate the sources.
   - With the larger common tier, some pars are lower than in §2's feasibility check, e.g. BRIDGE is par 3 via GLIDER → UGLIER.
+- **Engine API (Session 3), all in `src/engine/`:**
+  - `words.ts`:
+    - `Dictionary` with `has`, `entry`, `fullDist`, `par` and `withKey(sortedKey)`.
+    - `normalize`, `sortedKey`.
+    - `loadGameData(baseUrl?, fetch?)` returns `{dict, daily}`. It is cached per URL and evicted on failure.
+  - `rules.ts`:
+    - `validateStep(ladder, input, dict)` returns `{ok, word, won}` or `{ok: false, error}`. The ladder includes the start word, and the
+      previous word is `ladder.at(-1)`.
+    - Check order: length → notWord → repeat → anagramOnly → notOneChange → deadEnd.
+    - Also exports `multisetDiff`, `changedLetter` (letters kept in place are matched first, so the marker lands on the moved-in copy)
+      and `STEP_ERROR_MESSAGES`.
+  - `solver.ts`:
+    - `neighbours`.
+    - `nextOnShortestPath(word, dict, exclude?)`: from a word with a par it follows par − 1 over common words, so hints use familiar
+      words. Otherwise it ranks by lowest fullDist, then common first, then alphabetically.
+    - `shortestPath(start, dict)`.
+  - `daily.ts`: `dayNumber` (clamped to ≥ 1 before launch), `dayStart`, `msUntilNext`, `startWord`, `formatCountdown`.
+  - `scoring.ts`: `scoreLadder` (extra may be negative) and `resultMessage`.
+  - `share.ts`: `tileColours` (Wordle-style, count-aware), `shareText`, `streakShareText`.
+  - `config.ts` has a placeholder `SITE_URL = 'https://miggle.example'`.
 - **Tooling facts (Session 1):** Vite 8, TypeScript 6 (strict, `noUncheckedIndexedAccess`), Vitest 5, ESLint 10 flat config
   (`eslint.config.js`, typescript-eslint + eslint-config-prettier), Prettier 3 (single quotes, width 100; `CLAUDE.md` is
   prettier-ignored). ESLint forbids `window`/`document`/`localStorage`/`navigator` in `src/engine/**`.
@@ -279,7 +300,7 @@ Word-suggestion feedback form, archive replay of past dailies, accounts or cloud
 | 0 Planning | ✅ done 2026-10-24 | Researched Feetle, Poople and clones. Chose the "change one letter + shuffle" rule because MIGUEL has no in-place neighbours. Wrote this plan. |
 | 1 Scaffold | ✅ done 2026-10-24 | Hand-written Vite vanilla-TS scaffold (no create-vite), Vitest/ESLint/Prettier wired, §3 folders (empty ones hold `.gitkeep`), `src/config.ts` (+ `STORAGE_PREFIX`; placeholder `EPOCH` = 2026-10-24 08:00 UTC), tokens/base/game CSS, placeholder page (wordmark, 5 empty rows + a green MIGUEL row, footer). Inline 🥸 SVG favicon until Session 7. Checked at 360px in light and dark. **Follow-ups:** a `SITE_URL` config value for the share text (Session 3/5); verify the amber/green tile contrast and colour-blind safety in Session 8. |
 | 2 Word data | ✅ done 2026-10-24 | `scripts/build_data.py` + `npm run data`. Report: 15,153 accepted words (79 blocked), 3,398 common, 91 dead ends; common par histogram 1: 8 · 2: 25 · 3: 175 · 4: 670 · **5: 1,303 · 6: 795** · 7: 196 · 8+: 60; daily list 1,362 puzzles (par 4: 253 · 5: 578 · 6: 406 · 7: 125); `words.json` 257 KB raw / 55 KB gzip. Tests in `tests/data.test.ts` cover the BFS invariants for fullDist and par, gate words at [1, 1], the example ladders, daily-list rules, blocklist removal and size. **Deviations:** added `data-src/daily-exclude.txt`, a bundled `freq6.tsv` and `enable-bases.txt` (inflection filter), `@types/node`; daily Zipf floor lowered from 3.5 to 3.2 to reach three years. **Follow-ups:** freeze already-published days before any post-launch data rebuild, because `daily.json` order changes when curation changes (Session 8); the blocklist is a first pass, so review it again before launch; credit wordfreq (CC BY-SA 4.0) and ENABLE on the About page (Session 7); hints could avoid awkward-but-valid words (Session 6). |
-| 3 Engine | ⬜ | |
+| 3 Engine | ✅ done 2026-10-24 | Pure engine in `src/engine/` (words, rules, solver, daily, scoring, share), with no DOM access (enforced by ESLint). 85 tests: a fixture dictionary plus real data, every daily word's shortest path equals its par and validates step by step, the §2 ladders, UTC reset, leap-day and time-zone edges, and duplicate letters (MIGGLE, ILLUME, GIGGLE). Engine coverage is 100% of lines and 99% of branches. Added `@vitest/coverage-v8`, `npm run coverage`, `SITE_URL`, and `tests/helpers.ts`; `tests/data.test.ts` now reuses the engine's `neighbours`. **Deviations:** `validateStep(ladder, input, dict)` replaces the plan's `(prev, next, ladder)`, because the previous word is always the last one in the ladder. Result and error messages live in the engine (`STEP_ERROR_MESSAGES`, `resultMessage`) so daily and unlimited modes share them. Added `formatCountdown`, `dayStart` and `streakShareText`. **Follow-ups:** set the real `SITE_URL` (Session 8); the stats histogram needs an "under par" bucket, because extra can be negative (Session 5). |
 | 4 Game UI | ⬜ | |
 | 5 Persistence/stats/share | ⬜ | |
 | 6 Hints + Unlimited | ⬜ | |
