@@ -1,0 +1,14 @@
+node_modules/
+dist/
+coverage/
+*.local
+.env*
+.DS_Store
+npm-debug.log*
+__pycache__/
+*.pyc
+.vscode/*
+!.vscode/extensions.json
+.idea/
+test-results/
+playwright-report/
