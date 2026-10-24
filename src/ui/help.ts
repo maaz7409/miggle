@@ -1,4 +1,4 @@
-import { DAILY_HINTS, TARGET, WORD_LEN } from '../config';
+import { AUTHOR_URL, DAILY_HINTS, TARGET, WORD_LEN } from '../config';
 import { dayStart } from '../engine/daily';
 import { prefersReducedMotion } from './animations';
 import { createTile, ladderRows, wordRow } from './board';
@@ -125,6 +125,8 @@ export function openHelpModal(mode: 'daily' | 'unlimited' = 'daily'): ModalHandl
         h('a', { href: `${import.meta.env.BASE_URL}about.html` }, 'About'),
         ' · ',
         h('a', { href: `${import.meta.env.BASE_URL}privacy.html` }, 'Privacy'),
+        ' · ',
+        h('a', { href: AUTHOR_URL, target: '_blank', rel: 'noopener noreferrer' }, 'GitHub'),
       ),
     ],
     demo.stop,

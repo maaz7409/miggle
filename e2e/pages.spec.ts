@@ -11,6 +11,16 @@ test('answer pages keep the solution behind a tap', async ({ page }) => {
   await expect(answer.getByText(path.join(' → '))).toBeVisible();
 });
 
+test('every page links to the author on GitHub', async ({ page }) => {
+  for (const path of ['/', '/unlimited.html', '/about.html', '/answers/']) {
+    await page.goto(path);
+    await expect(page.getByRole('link', { name: 'maaz7409 on GitHub' }).first()).toHaveAttribute(
+      'href',
+      'https://github.com/maaz7409',
+    );
+  }
+});
+
 test('content pages link together and to the game', async ({ page }) => {
   await page.goto('/how-to-play.html');
   await page.getByRole('link', { name: 'About' }).click();

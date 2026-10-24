@@ -152,3 +152,9 @@ details.answer .reveal p:first-child {
   gap: var(--space-1) var(--space-4);
   margin-bottom: var(--space-2);
 }
+
+.github-btn {
+  margin-top: var(--space-2);
+  color: var(--text);
+  text-decoration: none;
+}

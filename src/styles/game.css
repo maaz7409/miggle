@@ -23,14 +23,32 @@
 
 /* ---------------------------------------------------------------- mode tabs & unlimited bar */
 
-.mode-tabs {
-  display: flex;
-  justify-content: center;
-  gap: var(--space-1);
+/* Mode tabs, centred, with the GitHub button pinned to the right. */
+.tab-bar {
+  position: relative;
   width: 100%;
   max-width: var(--max-width);
   margin: 0 auto;
   padding: var(--space-2) var(--gutter) 0;
+}
+
+.mode-tabs {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-1);
+}
+
+.github-link {
+  position: absolute;
+  right: calc(var(--gutter) - 6px);
+  bottom: -4px;
+  width: 36px;
+  height: 36px;
+  color: var(--text-muted);
+}
+
+.github-link:hover {
+  color: var(--text);
 }
 
 .mode-tabs a {

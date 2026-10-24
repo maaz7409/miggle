@@ -96,6 +96,22 @@ describe('archive, sitemap and robots', () => {
   });
 });
 
+describe('branding', () => {
+  it('never names other games on public pages', () => {
+    const pages = [
+      layout(ctx, archivePage(ctx)),
+      layout(ctx, answerPage(ctx, 1)),
+      ...['about', 'privacy', 'how-to-play'].map((name) =>
+        renderFragment(readRepoFile(`content/${name}.html`), `/${name}.html`),
+      ),
+      readRepoFile('index.html'),
+      readRepoFile('unlimited.html'),
+      readRepoFile('README.md'),
+    ];
+    for (const html of pages) expect(html).not.toMatch(/feetle|poople/i);
+  });
+});
+
 describe('content fragments', () => {
   it('expand root links and ladder markers', () => {
     expect(rootPrefix('/about.html')).toBe('./');

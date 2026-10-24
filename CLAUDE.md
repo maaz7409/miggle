@@ -109,7 +109,9 @@ Append ` 💡×N` to the first line if the player used hints.
   `Dead end! That word can't reach MIGUEL` · `Perfect! N steps 🥸` · `Made it in N steps (X extra)` ·
   `You found a path under par!`
 - **Branding:** Miggle is original. Use our own name, design, palette and copy. Never copy Feetle's assets or code, or imply any affiliation.
-  The About page may say "inspired by Feetle and Poople".
+  **Do not name Feetle, Poople or other games anywhere public (site, README), not even in a "not affiliated" note** (user request,
+  2026-10-24). The research notes in this file are internal; the About page credits only Lewis Carroll's *Doublets*.
+  A GitHub button (`AUTHOR_URL` = https://github.com/maaz7409) sits at the right of the tab row on every page.
 
 ---
 

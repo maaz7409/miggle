@@ -4,7 +4,7 @@ A daily word ladder to **MIGUEL**. Start from a 6-letter word and reach MIGUEL i
 as possible. Each step swaps exactly one letter for a different one, and you may rearrange the
 letters however you like. Every step must be a real word.
 
-Inspired by Feetle and Poople. Miggle is an independent project and is not affiliated with either.
+Made by [maaz7409](https://github.com/maaz7409).
 
 ## Development
 

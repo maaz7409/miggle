@@ -94,6 +94,14 @@ a {
   fill: currentColor;
 }
 
+/* Solid icons (e.g. the GitHub mark) are filled rather than stroked. */
+svg.fill-icon {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+  stroke: none;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

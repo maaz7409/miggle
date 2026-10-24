@@ -19,6 +19,9 @@ export const EPOCH = Date.UTC(2026, 9, 24, RESET_UTC.hour, RESET_UTC.minute);
 /** Hints available on each daily puzzle (1: which letter to swap, 2: the next word). */
 export const DAILY_HINTS = 2;
 
+/** The author's GitHub profile, linked from every page. */
+export const AUTHOR_URL = 'https://github.com/maaz7409';
+
 /** Prefix for every localStorage key. */
 export const STORAGE_PREFIX = 'miggle.';
 
